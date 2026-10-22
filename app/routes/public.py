@@ -34,21 +34,21 @@ from app.services.support import availability
 public_bp = Blueprint("public", __name__)
 
 STATIC_PAGES = {
-    "get-help": "public/get_help.html",
-    "report-wrongdoing": "public/report_wrongdoing.html",
-    "awareness": "public/awareness.html",
-    "investigations": "public/investigations.html",
-    "legal-help": "public/legal_help.html",
-    "digital-safety": "public/digital_safety.html",
-    "live-support": "public/live_support.html",
-    "about": "public/about.html",
-    "safeguarding": "public/safeguarding.html",
-    "privacy": "public/privacy.html",
-    "editorial-policy": "public/editorial_policy.html",
-    "corrections": "public/corrections.html",
-    "complaints": "public/complaints.html",
-    "accessibility": "public/accessibility.html",
-    "contact": "public/contact.html",
+    "get-help": "site/get_help.html",
+    "report-wrongdoing": "site/report_wrongdoing.html",
+    "awareness": "site/awareness.html",
+    "investigations": "site/investigations.html",
+    "legal-help": "site/legal_help.html",
+    "digital-safety": "site/digital_safety.html",
+    "live-support": "site/live_support.html",
+    "about": "site/about.html",
+    "safeguarding": "site/safeguarding.html",
+    "privacy": "site/privacy.html",
+    "editorial-policy": "site/editorial_policy.html",
+    "corrections": "site/corrections.html",
+    "complaints": "site/complaints.html",
+    "accessibility": "site/accessibility.html",
+    "contact": "site/contact.html",
 }
 
 
@@ -75,7 +75,7 @@ def home():
         .all()
     )
     return render_template(
-        "public/home.html",
+        "site/home.html",
         latest=latest,
         availability=availability(),
         contacts=_contacts(),
@@ -128,7 +128,7 @@ def publication(slug: str):
     pub = Publication.query.filter_by(slug=slug).first_or_404()
     if not pub.is_public:
         abort(404)
-    return render_template("public/publication.html", pub=pub)
+    return render_template("site/publication.html", pub=pub)
 
 
 @public_bp.route("/requests/new", methods=["GET", "POST"])
@@ -152,10 +152,10 @@ def new_request():
         db.session.flush()
         audit.record("request.created", target_type="public_request", target_id=req.id, details={"type": req.request_type})
         db.session.commit()
-        return render_template("public/request_submitted.html", reference=req.reference)
+        return render_template("site/request_submitted.html", reference=req.reference)
     if request.method == "POST":
         flash(t("validation.form_errors"), "error")
-    return render_template("public/request_new.html", form=form)
+    return render_template("site/request_new.html", form=form)
 
 
 @public_bp.route("/my-reports")
@@ -164,7 +164,7 @@ def my_reports():
     if current_user.is_staff:
         return redirect(url_for("workspace.home"))
     cases = Case.query.filter_by(reporter_user_id=current_user.id).order_by(Case.created_at.desc()).all()
-    return render_template("public/my_reports.html", cases=cases)
+    return render_template("site/my_reports.html", cases=cases)
 
 
 @public_bp.route("/lang/<code>")
@@ -191,7 +191,7 @@ def set_language(code: str):
 
 @public_bp.route("/offline")
 def offline():
-    return render_template("public/offline.html")
+    return render_template("site/offline.html")
 
 
 @public_bp.route("/sw.js")

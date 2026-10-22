@@ -82,7 +82,7 @@ def test_every_template_key_exists_in_english(app):
 
 
 def test_public_content_fragments_exist_for_both_languages(app):
-    root = pathlib.Path(app.root_path) / "templates" / "public" / "content"
+    root = pathlib.Path(app.root_path) / "templates" / "site" / "content"
     for slug in (
         "get-help",
         "report-wrongdoing",

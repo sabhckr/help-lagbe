@@ -1,7 +1,7 @@
-{% extends "public/_page.html" %}
-{% set page_key = 'complaints' %}{% set slug = 'complaints' %}
+{% extends "site/_page.html" %}
+{% set page_key = 'safeguarding' %}{% set slug = 'safeguarding' %}
 {% block after %}
-{% if page_key in ('legal_help', 'safeguarding', 'contact') %}{% include 'public/_contacts.html' %}{% endif %}
+{% if page_key in ('legal_help', 'safeguarding', 'contact') %}{% include 'site/_contacts.html' %}{% endif %}
 {% if page_key == 'contact' %}
 <h2>{{ t('contact_page.channels_title') }}</h2>
 <ul>

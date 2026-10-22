@@ -28,7 +28,7 @@
     <p class="small muted">{% if availability.open %}{{ t('support.agents_online', n=availability.agents_online|bn_digits) }}{% else %}{{ t('support.closed_explain') }}{% endif %}{% set hours = availability.hours_bn if current_locale == 'bn' and availability.hours_bn else availability.hours_en %}{% if hours %}<br>{{ t('support.hours') }}: {{ hours }}{% endif %}</p>
     <a class="btn btn-ghost btn-sm" href="{{ url_for('public.page', slug='live-support') }}">{{ t('home.support_link') }}</a>
   </div>
-  {% include 'public/_contacts.html' %}
+  {% include 'site/_contacts.html' %}
 </section>
 
 <section class="mt-7">

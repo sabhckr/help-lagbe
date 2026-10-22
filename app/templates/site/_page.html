@@ -6,7 +6,7 @@
   <h1>{{ t('page.' ~ page_key ~ '.title') }}</h1>
   {% block intro %}{% endblock %}
   {% block before %}{% endblock %}
-  {% include 'public/content/' ~ slug ~ '.' ~ current_locale ~ '.html' ignore missing %}
+  {% include 'site/content/' ~ slug ~ '.' ~ current_locale ~ '.html' ignore missing %}
   {% block after %}{% endblock %}
 </article>
 {% endblock %}
