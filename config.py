@@ -31,6 +31,17 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _normalize_db_url(url: str) -> str:
+    """Hosted Postgres (Neon, Vercel) hands out postgres:// URLs; SQLAlchemy needs the psycopg 3 dialect."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
+
 class BaseConfig:
     ENV_NAME = "base"
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
@@ -38,7 +49,7 @@ class BaseConfig:
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     IDENTITY_ENCRYPTION_KEY = os.environ.get("IDENTITY_ENCRYPTION_KEY", "")
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'help_lagbe.db'}")
+    SQLALCHEMY_DATABASE_URI = _normalize_db_url(os.environ.get("DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'help_lagbe.db'}"))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS: dict[str, Any] = {"pool_pre_ping": True}
 
@@ -59,7 +70,7 @@ class BaseConfig:
     WTF_CSRF_SSL_STRICT = False  # Referer checks break behind some proxies; origin is enforced by SameSite + token.
 
     # Uploads (evidence). Stored outside the static folder, never served directly.
-    EVIDENCE_DIR = os.environ.get("EVIDENCE_DIR", str(INSTANCE_DIR / "evidence"))
+    EVIDENCE_DIR = os.environ.get("EVIDENCE_DIR", "/tmp/help_lagbe_evidence" if ON_VERCEL else str(INSTANCE_DIR / "evidence"))  # nosec B108
     MAX_CONTENT_LENGTH = _env_int("MAX_UPLOAD_MB", 25) * 1024 * 1024
     EVIDENCE_MAX_FILES_PER_REPORT = 5
     EVIDENCE_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "pdf", "mp3", "m4a", "mp4", "txt"}
@@ -140,7 +151,7 @@ class ProductionConfig(BaseConfig):
             problems.append("IDENTITY_ENCRYPTION_KEY must be set (Fernet key).")
         if cls.SQLALCHEMY_DATABASE_URI.startswith("sqlite://") and "DATABASE_URL" not in os.environ:
             problems.append("DATABASE_URL must be set explicitly in production.")
-        if cls.RATELIMIT_STORAGE_URI == "memory://":
+        if cls.RATELIMIT_STORAGE_URI == "memory://" and not _env_bool("ALLOW_MEMORY_RATELIMIT", False):
             problems.append("RATELIMIT_STORAGE_URI should point at a shared store (e.g. redis://) in production.")
         if problems:
             raise RuntimeError("Refusing to start in production:\n - " + "\n - ".join(problems))
