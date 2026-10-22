@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+  <h1 class="text-2xl font-bold mb-2">{{ complaint.title }}</h1>
+  <p class="text-sm text-slate-500 mb-4">Public Report · {{ complaint.public_id }} · Severity: {{ complaint.severity }}</p>
+  <div class="prose">
+    <p>{{ complaint.public_summary or 'Summary pending editorial finalization.' }}</p>
+  </div>
+  <p class="mt-6 text-xs text-slate-400">All personal identifiers have been removed. This publication was approved by the editorial team.</p>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+  <h2 class="text-2xl font-bold mb-2">Submit a Report</h2>
+  <p class="text-sm text-slate-600 mb-6">You may submit anonymously. Identities are never published without explicit editorial approval and redaction.</p>
+  <form method="POST">
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Title</label>
+      <input type="text" name="title" required class="w-full border rounded px-3 py-2">
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Description</label>
+      <textarea name="description" rows="5" required class="w-full border rounded px-3 py-2"></textarea>
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Category</label>
+      <select name="category" class="w-full border rounded px-3 py-2">
+        <option value="human_support">Human Support</option>
+        <option value="legal">Legal Assistance</option>
+        <option value="cyber">Cybersecurity Incident</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="mb-6 flex items-center">
+      <input type="checkbox" name="anonymous" id="anonymous" checked class="mr-2">
+      <label for="anonymous" class="text-sm">Submit anonymously (recommended)</label>
+    </div>
+    <button type="submit" class="bg-primary text-white px-6 py-2 rounded font-medium">Submit Report</button>
+  </form>
+</div>
+{% endblock %}
