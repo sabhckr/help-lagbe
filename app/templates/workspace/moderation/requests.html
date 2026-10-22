@@ -1,0 +1,10 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import empty %}
+{% block title %}{{ t('ws.requests') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.requests') }}</h1><p class="muted">{{ t('request.queue_help') }}</p></div></div>
+<div class="cluster mb-3">{% for s in ('open','in_review','upheld','rejected','closed') %}<a class="chip" href="{{ url_for('workspace.requests_queue', status=s) }}" {% if status == s %}aria-current="true"{% endif %}>{{ t('request_status.' ~ s) }}</a>{% endfor %}</div>
+{% if items %}<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('request.reference') }}</th><th>{{ t('request.type') }}</th><th>{{ t('request.about') }}</th><th>{{ t('audit.when') }}</th></tr></thead><tbody>
+{% for r in items %}<tr><td><a class="row-link mono" href="{{ url_for('workspace.request_detail', request_id=r.id) }}">{{ r.reference }}</a></td><td>{{ t('request_type.' ~ r.request_type) }}</td><td class="small">{% if r.publication %}{{ r.publication.headline }}{% elif r.case_reference %}{{ r.case_reference }}{% else %}—{% endif %}</td><td class="small nowrap">{{ r.created_at|dt }}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}{{ empty('request.none') }}{% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% macro level(n) %}
+  {% if n %}<span class="badge badge-level badge-level-{{ n }}">{{ t('severity.short') }} {{ n|bn_digits }} · {{ t('severity.level' ~ n ~ '_short') }}</span>{% else %}<span class="badge badge-muted">{{ t('severity.unassessed') }}</span>{% endif %}
+{% endmacro %}
+
+{% macro status(s) %}<span class="badge badge-status badge-status-{{ s }}">{{ t('status.' ~ s) }}</span>{% endmacro %}
+
+{% macro stage(s) %}<span class="badge badge-stage badge-stage-{{ s }}">{{ t('stage.' ~ s) }}</span>{% endmacro %}
+
+{% macro empty(title, text=None, href=None, action=None) %}
+<div class="empty">
+  <p class="empty__title">{{ t(title) }}</p>
+  {% if text %}<p class="muted">{{ t(text) }}</p>{% endif %}
+  {% if href and action %}<a class="btn btn-ghost" href="{{ href }}">{{ t(action) }}</a>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro stat(label, value, href=None, tone='') %}
+<div class="stat {{ tone }}">
+  <span class="stat__value">{{ value|bn_digits }}</span>
+  <span class="stat__label">{% if href %}<a href="{{ href }}">{{ t(label) }}</a>{% else %}{{ t(label) }}{% endif %}</span>
+</div>
+{% endmacro %}
+
+{% macro flag(case) %}
+  {% if case.safety_flag %}<span class="badge badge-danger">{{ t('case.safety_flag') }}</span>{% endif %}
+  {% if case.child_safety_flag %}<span class="badge badge-danger">{{ t('case.child_flag') }}</span>{% endif %}
+  {% if case.moderation_hold %}<span class="badge badge-warn">{{ t('case.moderation_hold') }}</span>{% endif %}
+  {% if case.is_spam %}<span class="badge badge-muted">{{ t('case.spam') }}</span>{% endif %}
+{% endmacro %}
+
+{% macro pagination(p, endpoint) %}
+{% if p.pages > 1 %}
+{% set args = request.args.to_dict() %}{% set _ = args.pop('page', None) %}
+<nav class="pagination" aria-label="{{ t('ui.pagination') }}">
+  {% if p.has_prev %}<a href="{{ url_for(endpoint, page=p.prev_num, **args) }}" rel="prev">‹ {{ t('ui.prev') }}</a>{% endif %}
+  <span>{{ p.page|bn_digits }} / {{ p.pages|bn_digits }}</span>
+  {% if p.has_next %}<a href="{{ url_for(endpoint, page=p.next_num, **args) }}" rel="next">{{ t('ui.next') }} ›</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro label_badge(label) %}<span class="badge badge-label badge-label-{{ label }}">{{ t('pub_label.' ~ label) }}</span>{% endmacro %}

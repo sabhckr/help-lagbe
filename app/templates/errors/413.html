@@ -1,0 +1,5 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('error.413_title') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="error-page"><p class="eyebrow">{{ t('error.code') }} 413</p><h1>{{ t('error.413_title') }}</h1><p class="lead">{{ t('error.413_text') }}</p><a class="btn btn-primary" href="{{ url_for('report.new') }}">{{ t('error.back_to_form') }}</a></div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% block title %}{{ t('publication.new') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('publication.new') }}</h1><p class="muted">{{ t('publication.new_help') }}</p></div></div>
+<form method="post" class="card" novalidate data-once>
+  {{ form.hidden_tag() }}
+  <div class="grid grid-2">{{ field(form.kind) }}{{ field(form.label, help='publication.label_help') }}</div>
+  {{ field(form.case_reference, help='publication.case_reference_help') }}
+  {{ field(form.headline) }}{{ field(form.headline_bn) }}
+  {{ field(form.body, rows=12, help='publication.body_help') }}{{ field(form.body_bn, rows=12) }}
+  {{ checkbox(form.legal_review_required, help='publication.legal_required_help') }}
+  <div class="form-actions">{{ submit('publication.create_button') }}<a class="btn btn-ghost" href="{{ url_for('workspace.publications') }}">{{ t('ui.cancel') }}</a></div>
+</form>
+{% endblock %}

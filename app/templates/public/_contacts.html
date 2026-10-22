@@ -1,0 +1,11 @@
+<aside class="card card--danger" aria-labelledby="contacts-title">
+  <h2 class="mt-0" id="contacts-title">{{ t('contacts.public_title') }}</h2>
+  <p class="small">{{ t('contacts.public_help') }}</p>
+  {% set verified = contacts|selectattr('verified')|list %}
+  {% if verified %}
+  <ul class="stack-sm list-plain">{% for c in verified %}<li><strong>{{ c.name_bn if current_locale == 'bn' and c.name_bn else c.name_en }}</strong> — <a href="tel:{{ c.number }}" class="mono">{{ c.number|bn_digits }}</a>{% set d = c.description_bn if current_locale == 'bn' and c.description_bn else c.description_en %}{% if d %}<br><span class="small muted">{{ d }}</span>{% endif %}</li>{% endfor %}</ul>
+  {% else %}
+  <p class="small"><strong>{{ t('contacts.none_verified_title') }}</strong> {{ t('contacts.none_verified_text') }}</p>
+  {% endif %}
+  <p class="small muted mt-2">{{ t('site.no_dispatch') }}</p>
+</aside>

@@ -1,0 +1,7 @@
+{% extends "public/_page.html" %}
+{% from "macros/ui.html" import label_badge, empty %}
+{% set page_key = 'awareness' %}{% set slug = 'awareness' %}
+{% block after %}
+<h2>{{ t('awareness.list_title') }}</h2>
+{% if items %}<div class="grid grid-2">{% for p in items %}<a class="card link-plain" href="{{ url_for('public.publication', slug=p.slug) }}">{{ label_badge(p.label) }}<h3 class="mt-1">{{ p.headline_bn if current_locale == 'bn' and p.headline_bn else p.headline }}</h3><p class="small muted">{{ p.published_at|d }}</p></a>{% endfor %}</div>{% else %}{{ empty('awareness.none_title', 'awareness.none_text') }}{% endif %}
+{% endblock %}

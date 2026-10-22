@@ -1,0 +1,244 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox, radios, file, submit %}
+{% from "macros/ui.html" import level, status, flag, empty %}
+{% block title %}{{ case.reference }} · {{ t('ws.cases') }}{% endblock %}
+{% block workspace %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('category.' ~ case.category) }} · {{ t('dept.' ~ case.department) if case.department else '—' }}</p>
+    <h1 class="mono">{{ case.reference }}</h1>
+    <div class="cluster">{{ level(case.severity_level) }} {{ status(case.status) }} {{ flag(case) }}<span class="badge badge-muted">{{ t('report.type_' ~ case.submission_type) }}</span>{% if case.has_identity %}<span class="badge badge-warn">{{ t('case.identity_on_file') }}</span>{% endif %}</div>
+  </div>
+  <div class="right small muted">{{ t('case.received') }}: {{ case.created_at|dt }}<br>{{ t('case.updated') }}: {{ case.updated_at|dt }}</div>
+</div>
+
+{% if not narrative_ok %}
+  <div class="alert alert-info">
+    <h3>{{ t('case.restricted_title') }}</h3>
+    <p>{{ t('case.restricted_text') }}</p>
+  </div>
+  <dl class="kv">
+    <dt>{{ t('case.consent_publication') }}</dt><dd>{{ t('ui.yes') if case.consent_publication else t('ui.no') }}</dd>
+    <dt>{{ t('case.assignees') }}</dt><dd>{% for a in case.assignments if a.active %}{{ a.user.name }} ({{ t('case_role.' ~ a.role_in_case) }}){% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</dd>
+  </dl>
+  {% if current_user.can(P.CASE_ASSIGN) %}
+  <details class="panel-details"><summary>{{ t('case.assign_title') }}</summary><div class="panel-body">
+    <form method="post" action="{{ url_for('workspace.case_assign', reference=case.reference) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="assign_user">{{ t('case.assignee') }}</label><select name="user_id" id="assign_user">{% for u in (forms.assign.user_id.choices if forms.assign else []) %}<option value="{{ u[0] }}">{{ u[1] }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="assign_role">{{ t('case.role_in_case') }}</label><select name="role_in_case" id="assign_role">{% for v in ('lead','specialist','support','legal','cyber','editorial','action') %}<option value="{{ v }}">{{ t('case_role.' ~ v) }}</option>{% endfor %}</select></div>
+      <button class="btn btn-primary btn-sm">{{ t('case.assign_button') }}</button>
+    </form>
+  </div></details>
+  {% endif %}
+  {% if break_glass_form %}
+  <details class="panel-details"><summary>{{ t('case.break_glass_title') }}</summary><div class="panel-body">
+    <p class="small">{{ t('case.break_glass_text') }}</p>
+    <form method="post" action="{{ url_for('workspace.case_break_glass', reference=case.reference) }}" data-once>
+      {{ break_glass_form.hidden_tag() }}{{ field(break_glass_form.reason, rows=3) }}
+      <button class="btn btn-danger btn-sm">{{ t('case.break_glass_button') }}</button>
+    </form>
+  </div></details>
+  {% endif %}
+{% else %}
+
+<div class="grid grid-2 items-start">
+  <div>
+    <h2>{{ case.title }}</h2>
+    <div class="narrative">{{ case.narrative }}</div>
+    <dl class="kv mt-3">
+      <dt>{{ t('report.approximate_time') }}</dt><dd>{{ case.approximate_time or '—' }}</dd>
+      <dt>{{ t('report.location') }}</dt><dd>{{ case.location_text or '—' }}</dd>
+      <dt>{{ t('report.immediate_danger') }}</dt><dd>{{ t('report.danger_' ~ case.immediate_danger) }}</dd>
+      <dt>{{ t('report.child_involved') }}</dt><dd>{{ t('ui.yes') if case.child_involved else t('ui.no') }}</dd>
+      <dt>{{ t('case.consent_publication') }}</dt><dd>{{ t('ui.yes') if case.consent_publication else t('ui.no') }}</dd>
+      <dt>{{ t('case.contact_preference') }}</dt><dd>{{ t('contact.' ~ case.contact_preference) }}{% if case.consent_contact %} · {{ t('case.consent_contact_yes') }}{% endif %}</dd>
+      <dt>{{ t('case.language') }}</dt><dd>{{ LANGUAGE_NAMES.get(case.language, case.language) }}</dd>
+    </dl>
+
+    <h3>{{ t('case.assignees') }}</h3>
+    <ul>{% for a in case.assignments if a.active %}<li>{{ a.user.name }} · {{ t('role.' ~ a.user.role) }} · {{ t('case_role.' ~ a.role_in_case) }}{% if current_user.can(P.CASE_ASSIGN) %} <form method="post" action="{{ url_for('workspace.case_unassign', reference=case.reference, user_id=a.user_id) }}" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="link small">{{ t('case.unassign') }}</button></form>{% endif %}</li>{% else %}<li class="muted">{{ t('case.no_assignees') }}</li>{% endfor %}</ul>
+
+    <h3>{{ t('case.history') }}</h3>
+    <ul class="timeline">
+      {% for s in case.status_changes|reverse %}<li class="is-status"><time>{{ s.created_at|dt }}</time><strong>{{ t('status.' ~ s.from_status) if s.from_status else '—' }} → {{ t('status.' ~ s.to_status) }}</strong> · {{ s.actor.name if s.actor else t('case.reporter') }}<br><span class="small">{{ s.reason }}</span></li>{% endfor %}
+    </ul>
+
+    <h3>{{ t('severity.history') }}</h3>
+    {% for a in case.severity_assessments|reverse %}
+      <div class="note"><div class="note__meta">{{ a.created_at|dt }} · {{ a.assessor.name }} · {{ t('severity.direction_' ~ a.direction) }}{% if a.is_override %} · <span class="badge badge-warn">{{ t('severity.override') }}</span>{% endif %}</div>{{ level(a.level) }}<p class="mt-xs">{{ a.reasoning }}</p></div>
+    {% else %}<p class="muted small">{{ t('severity.none_yet') }}</p>{% endfor %}
+
+    <h3>{{ t('case.notes') }}</h3>
+    {% for n in notes|reverse %}
+      <div class="note {% if n.visibility == 'legal_privileged' %}note--legal{% elif n.visibility == 'safeguarding' %}note--safeguarding{% endif %}"><div class="note__meta">{{ n.created_at|dt }} · {{ n.author.name }} · {{ t('visibility.' ~ n.visibility) }}{% if n.note_type != 'note' %} · {{ n.note_type }}{% endif %}</div>{{ n.body }}</div>
+    {% else %}<p class="muted small">{{ t('case.no_notes') }}</p>{% endfor %}
+
+    <h3>{{ t('case.reporter_updates') }}</h3>
+    <ul class="timeline">{% for u in case.updates|reverse %}<li class="{% if u.kind == 'status' %}is-status{% elif u.kind == 'reporter_message' %}is-reporter{% endif %}"><time>{{ u.created_at|dt }}</time>{% if u.kind == 'status' %}{{ t(u.body) }}{% elif u.kind == 'reporter_message' %}<strong>{{ t('case.reporter') }}:</strong> {{ u.body }}{% else %}<strong>{{ u.author.name if u.author else '' }}:</strong> {{ u.body }}{% endif %}</li>{% endfor %}</ul>
+
+    {% if current_user.can(P.CASE_EVIDENCE_VIEW) %}
+    <h3>{{ t('evidence.title') }}</h3>
+    {% for e in evidence %}
+      <div class="note">
+        <div class="note__meta">{{ e.created_at|dt }} · {{ e.mime_type }} · {{ (e.size_bytes // 1024)|bn_digits }} KB · <span class="badge {{ 'badge-ok' if e.scan_status == 'clean' else 'badge-warn' if e.scan_status == 'not_scanned' else 'badge-danger' }}">{{ t('scan.' ~ e.scan_status) }}</span>{% if e.quarantined %} <span class="badge badge-danger">{{ t('evidence.quarantined') }}</span>{% endif %}</div>
+        <strong>{{ e.original_name }}</strong>{% if e.description %} — {{ e.description }}{% endif %}<br><span class="small mono muted">sha256 {{ e.sha256[:16] }}…</span>
+        {% if current_user.can(P.CASE_EVIDENCE_DOWNLOAD) and e.is_available %}
+        <details class="mt-1"><summary class="small">{{ t('evidence.download') }}</summary>
+          <form method="post" action="{{ url_for('workspace.case_evidence_download', reference=case.reference, evidence_id=e.id) }}" class="stack-sm" data-once>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label for="dl-reason-{{ e.id }}">{{ t('access.reason') }}</label><textarea name="reason" id="dl-reason-{{ e.id }}" rows="2" required minlength="10"></textarea></div>
+            <div class="cluster"><button class="btn btn-ghost btn-sm">{{ t('evidence.download') }}</button>{% if current_user.can(P.CASE_EVIDENCE_EXPORT) %}<button class="btn btn-ghost btn-sm" name="export" value="1">{{ t('evidence.export') }}</button>{% endif %}</div>
+          </form></details>
+        {% endif %}
+        {% if current_user.can(P.CYBER_CUSTODY) %}
+        <details class="mt-1"><summary class="small">{{ t('custody.title') }} ({{ e.custody|length|bn_digits }})</summary>
+          <ul class="small">{% for r in e.custody %}<li>{{ r.created_at|dt }} · {{ t('custody_action.' ~ r.action) if ('custody_action.' ~ r.action) != t('custody_action.' ~ r.action) else r.action }} · {{ r.actor.name if r.actor else t('case.reporter') }}{% if r.notes %} — {{ r.notes }}{% endif %}</li>{% endfor %}</ul>
+          <form method="post" action="{{ url_for('workspace.case_evidence_verify', reference=case.reference, evidence_id=e.id) }}" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm">{{ t('custody.verify_hash') }}</button></form>
+          <form method="post" action="{{ url_for('workspace.case_evidence_custody', reference=case.reference, evidence_id=e.id) }}" class="stack-sm mt-1">
+            {{ forms.custody.hidden_tag() }}
+            <div class="field"><label for="cust-action-{{ e.id }}">{{ t('custody.action') }}</label><select name="action" id="cust-action-{{ e.id }}">{% for v,l in forms.custody.action.choices %}<option value="{{ v }}">{{ t(l) }}</option>{% endfor %}</select></div>
+            <div class="field"><label for="cust-notes-{{ e.id }}">{{ t('custody.notes') }}</label><textarea name="notes" id="cust-notes-{{ e.id }}" rows="2" required></textarea></div>
+            <button class="btn btn-ghost btn-sm">{{ t('custody.add') }}</button>
+          </form></details>
+        {% endif %}
+      </div>
+    {% else %}<p class="muted small">{{ t('evidence.none') }}</p>{% endfor %}
+    {% endif %}
+
+    <h3>{{ t('referral.title') }}</h3>
+    {% for r in case.referrals %}
+      <div class="note"><div class="note__meta">{{ r.created_at|dt }} · {{ r.owner.name }} · {{ t('referral_status.' ~ r.status) }}{% if r.confirmation_reference %} · {{ t('referral.confirmation') }}: {{ r.confirmation_reference }}{% endif %}</div><strong>{{ t('referral_type.' ~ r.referral_type) }}</strong> — {{ r.organisation }} · {{ t('referral.consent_obtained') }}: {{ t('ui.yes') if r.consent_obtained else t('ui.no') }}{% if r.follow_up_due %} · {{ t('referral.follow_up_due') }}: {{ r.follow_up_due|d }}{% endif %}{% if r.notes %}<p class="small mt-xs">{{ r.notes }}</p>{% endif %}
+        {% if current_user.can(P.CASE_REFERRAL) %}<details><summary class="small">{{ t('referral.update') }}</summary>
+          <form method="post" action="{{ url_for('workspace.case_referral_update', reference=case.reference, referral_id=r.id) }}" class="stack-sm">
+            {{ forms.referral_update.hidden_tag() }}
+            <div class="field"><label for="rs-{{ r.id }}">{{ t('referral.status') }}</label><select name="status" id="rs-{{ r.id }}">{% for v,l in forms.referral_update.status.choices %}<option value="{{ v }}" {% if v == r.status %}selected{% endif %}>{{ t(l) }}</option>{% endfor %}</select></div>
+            <div class="field"><label for="rc-{{ r.id }}">{{ t('referral.confirmation') }}</label><input type="text" name="confirmation_reference" id="rc-{{ r.id }}" value="{{ r.confirmation_reference or '' }}"><p class="field-help">{{ t('referral.confirmation_help') }}</p></div>
+            <div class="field"><label for="rn-{{ r.id }}">{{ t('referral.notes') }}</label><textarea name="notes" id="rn-{{ r.id }}" rows="2"></textarea></div>
+            <button class="btn btn-ghost btn-sm">{{ t('ui.save') }}</button>
+          </form></details>{% endif %}
+      </div>
+    {% else %}<p class="muted small">{{ t('referral.none') }}</p>{% endfor %}
+
+    <h3>{{ t('outcome.title') }}</h3>
+    {% for o in case.outcomes %}
+      <div class="note"><div class="note__meta">{{ o.created_at|dt }} · {{ o.recorded_by.name }}{% if o.verified %} · <span class="badge badge-ok">{{ t('outcome.verified_by', name=o.verified_by.name) }}</span>{% else %} · <span class="badge badge-warn">{{ t('outcome.unverified') }}</span>{% endif %}</div><strong>{{ t('outcome_type.' ~ o.outcome_type) }}</strong> · {{ t('finding.' ~ o.finding_status) }}{% if o.confirmation_reference %} · {{ t('outcome.confirmation') }}: {{ o.confirmation_reference }}{% endif %}<p class="mt-xs">{{ o.description }}</p>
+        {% if current_user.can(P.CASE_OUTCOME) and not o.verified and o.recorded_by_id != current_user.id %}<form method="post" action="{{ url_for('workspace.case_outcome_verify', reference=case.reference, outcome_id=o.id) }}" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm mt-xs">{{ t('outcome.verify_button') }}</button></form>{% endif %}
+      </div>
+    {% else %}<p class="muted small">{{ t('outcome.none') }}</p>{% endfor %}
+
+    {% if case.legal_intake %}
+    <h3>{{ t('legal.title') }}</h3>
+    <dl class="kv"><dt>{{ t('legal.matter_type') }}</dt><dd>{{ case.legal_intake.matter_type }}</dd><dt>{{ t('legal.status') }}</dt><dd>{{ t('legal_status.' ~ case.legal_intake.status) }}</dd><dt>{{ t('legal.deadline') }}</dt><dd>{{ case.legal_intake.deadline|d if case.legal_intake.deadline else '—' }} {{ case.legal_intake.deadline_note or '' }}</dd><dt>{{ t('legal.referral_partner') }}</dt><dd>{{ case.legal_intake.referral_partner or '—' }}</dd><dt>{{ t('legal.qualified_reviewer') }}</dt><dd>{{ case.legal_intake.qualified_reviewer or '—' }}</dd></dl>
+    {% endif %}
+  </div>
+
+  <div class="stack">
+    {% if current_user.can(P.CASE_SEVERITY) %}
+    <details class="panel-details" {% if case.severity_level is none %}open{% endif %}><summary>{{ t('severity.assess_title') }}</summary><div class="panel-body">
+      <p class="small muted">{{ t('severity.assess_help') }}</p>
+      <form method="post" action="{{ url_for('workspace.case_severity', reference=case.reference) }}" data-once>
+        {{ forms.severity.hidden_tag() }}{{ radios(forms.severity.level, descriptions={'1':'severity.level1_desc','2':'severity.level2_desc','3':'severity.level3_desc','4':'severity.level4_desc'}) }}{{ field(forms.severity.reasoning, rows=4, help='severity.reasoning_help') }}{{ checkbox(forms.severity.is_override, help='severity.override_help') }}
+        <button class="btn btn-primary btn-sm">{{ t('severity.save_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_STATUS) and forms.status.to_status.choices %}
+    <details class="panel-details"><summary>{{ t('case.status_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_status', reference=case.reference) }}" data-once>
+        {{ forms.status.hidden_tag() }}{{ field(forms.status.to_status, help='case.status_help') }}{{ field(forms.status.reason, rows=3) }}
+        <button class="btn btn-primary btn-sm">{{ t('case.status_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_ASSIGN) %}
+    <details class="panel-details"><summary>{{ t('case.assign_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_assign', reference=case.reference) }}">
+        {{ forms.assign.hidden_tag() }}{{ field(forms.assign.user_id) }}{{ field(forms.assign.role_in_case) }}
+        <button class="btn btn-primary btn-sm">{{ t('case.assign_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_TRIAGE) %}
+    <details class="panel-details"><summary>{{ t('case.route_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_route', reference=case.reference) }}">
+        {{ forms.route.hidden_tag() }}{{ field(forms.route.department) }}{{ field(forms.route.reason, rows=2) }}
+        <button class="btn btn-ghost btn-sm">{{ t('case.route_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_NOTE) %}
+    <details class="panel-details"><summary>{{ t('case.note_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_note', reference=case.reference) }}" data-once>
+        {{ forms.note.hidden_tag() }}{{ field(forms.note.body, rows=4, help='case.note_help') }}
+        {% if current_user.can(P.LEGAL_PRIVILEGED_NOTES) or current_user.role in ('support','supervisor') %}{{ field(forms.note.visibility) }}{% endif %}
+        <button class="btn btn-primary btn-sm">{{ t('case.note_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_MESSAGE_REPORTER) %}
+    <details class="panel-details"><summary>{{ t('case.update_title') }}</summary><div class="panel-body">
+      <p class="small muted">{{ t('case.update_help') }}</p>
+      <form method="post" action="{{ url_for('workspace.case_update', reference=case.reference) }}" data-once>
+        {{ forms.reporter_update.hidden_tag() }}{{ field(forms.reporter_update.body, rows=4) }}
+        <button class="btn btn-primary btn-sm">{{ t('case.update_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if case.has_identity and (current_user.can(P.CASE_IDENTITY_UNLOCK) or current_user.can(P.CASE_BREAK_GLASS)) %}
+    <details class="panel-details"><summary>{{ t('access.identity_title') }}</summary><div class="panel-body">
+      <p class="small">{{ t('access.identity_help') }}</p>
+      <form method="post" action="{{ url_for('workspace.case_identity', reference=case.reference) }}" data-once>
+        {{ forms.reason.hidden_tag() }}{{ field(forms.reason.reason, rows=3) }}
+        <button class="btn btn-danger btn-sm">{{ t('access.unlock_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_REFERRAL) %}
+    <details class="panel-details"><summary>{{ t('referral.add_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_referral', reference=case.reference) }}" data-once>
+        {{ forms.referral.hidden_tag() }}{{ field(forms.referral.referral_type) }}{{ field(forms.referral.organisation) }}{{ checkbox(forms.referral.consent_obtained, help='referral.consent_help') }}{{ field(forms.referral.follow_up_due) }}{{ field(forms.referral.notes, rows=2) }}
+        <button class="btn btn-primary btn-sm">{{ t('referral.add_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_OUTCOME) %}
+    <details class="panel-details"><summary>{{ t('outcome.add_title') }}</summary><div class="panel-body">
+      <p class="small muted">{{ t('outcome.help') }}</p>
+      <form method="post" action="{{ url_for('workspace.case_outcome', reference=case.reference) }}" data-once>
+        {{ forms.outcome.hidden_tag() }}{{ field(forms.outcome.outcome_type) }}{{ field(forms.outcome.finding_status, help='outcome.finding_help') }}{{ field(forms.outcome.description, rows=3) }}{{ field(forms.outcome.confirmation_reference, help='outcome.confirmation_help') }}
+        <button class="btn btn-primary btn-sm">{{ t('outcome.add_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.CASE_EVIDENCE_VIEW) %}
+    <details class="panel-details"><summary>{{ t('evidence.add_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_evidence_upload', reference=case.reference) }}" enctype="multipart/form-data" data-once>
+        {{ forms.evidence.hidden_tag() }}{{ file(forms.evidence.file, help='evidence.file_help') }}{{ field(forms.evidence.description) }}
+        <button class="btn btn-ghost btn-sm">{{ t('evidence.add_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.LEGAL_INTAKE) %}
+    <details class="panel-details"><summary>{{ t('legal.intake_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_legal_intake', reference=case.reference) }}" data-once>
+        {{ forms.legal.hidden_tag() }}{{ field(forms.legal.matter_type) }}{{ field(forms.legal.status) }}{{ field(forms.legal.deadline) }}{{ field(forms.legal.deadline_note) }}{{ field(forms.legal.referral_partner) }}{{ field(forms.legal.qualified_reviewer, help='legal.qualified_help') }}
+        <button class="btn btn-primary btn-sm">{{ t('ui.save') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.MOD_FLAG) %}
+    <details class="panel-details"><summary>{{ t('moderation.flag_title') }}</summary><div class="panel-body">
+      <form method="post" action="{{ url_for('workspace.case_flag', reference=case.reference) }}" data-once>
+        {{ forms.flag.hidden_tag() }}<input type="hidden" name="target_type" value="case"><input type="hidden" name="target_id" value="{{ case.id }}">{{ field(forms.flag.reason) }}{{ field(forms.flag.notes, rows=2) }}
+        <button class="btn btn-ghost btn-sm">{{ t('moderation.flag_button') }}</button>
+      </form>
+    </div></details>
+    {% endif %}
+    {% if current_user.can(P.PUB_DRAFT) and case.consent_publication %}
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('workspace.publication_new', case=case.reference) }}">{{ t('publication.draft_from_case') }}</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

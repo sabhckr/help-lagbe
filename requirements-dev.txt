@@ -1,0 +1,7 @@
+-r requirements.txt
+pytest==9.1.1
+ruff==0.17.1
+mypy==2.4.0
+types-WTForms
+bandit==1.9.4
+pip-audit

@@ -1,0 +1,16 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{{ t('ws.permissions') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.permissions') }}</h1><p class="muted">{{ t('perm.help') }}</p></div></div>
+<h2>{{ t('perm.sensitive_actions') }}</h2>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('perm.action') }}</th>{% for r in roles %}<th>{{ t('role.' ~ r) }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for perm, label in sensitive %}<tr><td><strong>{{ label }}</strong><br><code class="small muted">{{ perm }}</code></td>{% for r in roles %}<td class="right">{% if perm in matrix[r] %}<span class="badge badge-ok">✓</span>{% else %}<span class="muted">–</span>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+<h2>{{ t('perm.full_matrix') }}</h2>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('perm.permission') }}</th>{% for r in roles %}<th>{{ t('role.' ~ r) }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for perm in all_perms %}<tr><td><code class="small">{{ perm }}</code></td>{% for r in roles %}<td class="right">{% if perm in matrix[r] %}✓{% else %}<span class="muted">–</span>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">{{ t('perm.need_to_know') }}</p>
+{% endblock %}

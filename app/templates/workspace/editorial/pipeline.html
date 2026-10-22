@@ -1,0 +1,13 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import stage as stage_badge, label_badge, empty %}
+{% block title %}{{ t('ws.publications') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.publications') }}</h1><p class="muted">{{ t('publication.pipeline_help') }}</p></div>{% if current_user.can(P.PUB_DRAFT) %}<a class="btn btn-primary" href="{{ url_for('workspace.publication_new') }}">{{ t('publication.new') }}</a>{% endif %}</div>
+<div class="pipeline">
+  {% for s in order + ('rejected', 'withdrawn') %}
+  <div class="pipeline__col"><h3>{{ t('stage.' ~ s) }} · {{ grouped.get(s, [])|length|bn_digits }}</h3>
+    {% for p in grouped.get(s, []) %}<a class="pipeline__item link-plain block" href="{{ url_for('workspace.publication_detail', pub_id=p.id) }}"><strong>{{ p.headline }}</strong><br>{{ label_badge(p.label) }} <span class="small muted">{{ t('pub_kind.' ~ p.kind) }}{% if p.case %} · {{ p.case.reference }}{% endif %}</span></a>{% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

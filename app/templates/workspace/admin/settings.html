@@ -1,0 +1,21 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% block title %}{{ t('ws.settings') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><h1>{{ t('ws.settings') }}</h1></div>
+<form method="post" class="card" novalidate>
+  {{ form.hidden_tag() }}
+  {{ checkbox(form.mfa_required, help='admin.mfa_required_help') }}
+  {{ checkbox(form.public_registration, help='admin.public_registration_help') }}
+  {{ field(form.announcement_en, rows=2, help='admin.announcement_help') }}
+  {{ field(form.announcement_bn, rows=2) }}
+  <div class="form-actions">{{ submit('ui.save') }}</div>
+</form>
+<div class="card card--flat mt-3"><h2>{{ t('admin.policy_defaults') }}</h2><dl class="kv">
+  <dt>{{ t('admin.login_lockout') }}</dt><dd>{{ config.LOGIN_MAX_FAILURES|bn_digits }} / {{ config.LOGIN_LOCKOUT_MINUTES|bn_digits }} min</dd>
+  <dt>{{ t('admin.password_min') }}</dt><dd>{{ config.PASSWORD_MIN_LENGTH|bn_digits }}</dd>
+  <dt>{{ t('admin.session_hours') }}</dt><dd>{{ (config.PERMANENT_SESSION_LIFETIME.total_seconds() // 3600)|int|bn_digits }}</dd>
+  <dt>{{ t('admin.upload_limit') }}</dt><dd>{{ (config.MAX_CONTENT_LENGTH // 1048576)|bn_digits }} MB · {{ config.EVIDENCE_MAX_FILES_PER_REPORT|bn_digits }} {{ t('admin.files') }}</dd>
+  <dt>{{ t('admin.retention_days') }}</dt><dd>{{ config.DATA_RETENTION_DAYS_CLOSED_CASES|bn_digits }}</dd>
+</dl><p class="small muted">{{ t('admin.policy_defaults_help') }}</p></div>
+{% endblock %}

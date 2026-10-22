@@ -1,0 +1,47 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('report.submitted_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <p class="eyebrow">{{ t('report.submitted_eyebrow') }}</p>
+  <h1>{{ t('report.submitted_title') }}</h1>
+  <p class="lead">{{ t('report.submitted_lead') }}</p>
+
+  {% if receipt.safety %}
+  <div class="alert alert-error">
+    <h3>{{ t('report.safety_title') }}</h3>
+    <p>{{ t('report.safety_text') }}</p>
+    {% if contacts %}<ul class="cluster list-plain">{% for c in contacts %}<li><strong>{{ c.name_bn if current_locale == 'bn' and c.name_bn else c.name_en }}</strong>: <a href="tel:{{ c.number }}">{{ c.number|bn_digits }}</a></li>{% endfor %}</ul>{% endif %}
+  </div>
+  {% endif %}
+
+  <dl class="reference-box">
+    <dt>{{ t('track.reference') }}</dt>
+    <dd><span id="ref">{{ receipt.reference }}</span> <button type="button" class="btn btn-ghost btn-sm no-print" data-copy="ref">{{ t('ui.copy') }}</button></dd>
+    <dt>{{ t('track.secret') }}</dt>
+    <dd><span id="secret">{{ receipt.secret }}</span> <button type="button" class="btn btn-ghost btn-sm no-print" data-copy="secret">{{ t('ui.copy') }}</button></dd>
+  </dl>
+  <p><strong>{{ t('report.keep_safe') }}</strong> {{ t('report.keep_safe_text') }}</p>
+  <div class="cluster no-print">
+    <button type="button" class="btn btn-ghost" onclick="window.print()">{{ t('ui.print') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a>
+  </div>
+
+  {% if receipt.files %}<p class="small muted">{{ t('report.files_received', n=receipt.files|bn_digits) }}</p>{% endif %}
+  {% if receipt.upload_errors %}
+  <div class="alert alert-warn"><h3>{{ t('report.files_rejected') }}</h3><ul>{% for e in receipt.upload_errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+  {% endif %}
+
+  <h2>{{ t('report.what_next') }}</h2>
+  <ol class="steps">
+    <li>{{ t('report.next1') }}</li>
+    <li>{{ t('report.next2') }}</li>
+    <li>{{ t('report.next3') }}</li>
+  </ol>
+  <form method="post" action="{{ url_for('report.dismiss_receipt') }}" class="no-print mt-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primary" type="submit">{{ t('report.saved_button') }}</button>
+    <p class="small muted mt-1">{{ t('report.saved_note') }}</p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{{ t('social.export') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<h1>{{ t('social.export') }}</h1>
+<p class="muted">{{ t('social.export_help') }}</p>
+<p><strong>{{ t('channel.' ~ draft.channel) }}</strong> · {{ draft.publication.headline }}</p>
+<pre class="narrative" id="social-text">{{ draft.text }}</pre>
+<div class="cluster"><button type="button" class="btn btn-ghost" data-copy="social-text">{{ t('ui.copy') }}</button><a class="btn btn-primary" href="{{ url_for('workspace.publication_detail', pub_id=draft.publication_id) }}">{{ t('ui.back') }}</a></div>
+<p class="small muted mt-3">{{ t('social.export_note') }}</p>
+{% endblock %}

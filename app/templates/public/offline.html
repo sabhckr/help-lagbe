@@ -1,0 +1,5 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('state.offline_title') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="error-page"><h1>{{ t('state.offline_title') }}</h1><p class="lead">{{ t('state.offline_text') }}</p><p class="muted">{{ t('state.offline_hint') }}</p></div>
+{% endblock %}

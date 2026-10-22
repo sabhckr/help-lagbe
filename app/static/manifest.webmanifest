@@ -1,0 +1,11 @@
+{
+  "name": "Help Lagbe?",
+  "short_name": "Help Lagbe?",
+  "description": "Human to Human. People for People.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f1e8",
+  "theme_color": "#1f2326",
+  "lang": "en",
+  "icons": [{ "src": "/static/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,115 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% from "macros/ui.html" import stage as stage_badge, label_badge %}
+{% block title %}{{ pub.headline }} · {{ t('ws.publications') }}{% endblock %}
+{% block workspace %}
+<div class="page-head">
+  <div><p class="eyebrow">{{ t('pub_kind.' ~ pub.kind) }}{% if pub.case %} · <a class="mono" href="{{ url_for('workspace.case_detail', reference=pub.case.reference) }}">{{ pub.case.reference }}</a>{% endif %}</p><h1>{{ pub.headline }}</h1><div class="cluster">{{ stage_badge(pub.stage) }} {{ label_badge(pub.label) }}{% if pub.is_public %}<a class="small" href="{{ url_for('public.publication', slug=pub.slug) }}">{{ t('publication.view_public') }}</a>{% endif %}</div></div>
+  <div class="small muted right">{{ t('publication.drafted_by') }}: {{ pub.drafted_by.name }}<br>{% if pub.approved_by %}{{ t('publication.approved_by') }}: {{ pub.approved_by.name }}<br>{% endif %}{% if pub.published_at %}{{ t('publication.published_at') }}: {{ pub.published_at|dt }}{% endif %}</div>
+</div>
+
+<div class="grid grid-2 items-start">
+<div>
+  <div class="card">
+    <h2>{{ t('publication.gates') }}</h2>
+    <ul class="gate-list">{% for k, ok in pub.gates_passed().items() %}<li><span class="{{ 'ok' if ok else 'no' }}">{{ '✓' if ok else '○' }}</span> {{ t('gate.' ~ k) }}</li>{% endfor %}</ul>
+    <p class="small muted mt-2">{{ t('publication.order') }}: {% for s in order %}{{ t('stage.' ~ s) }}{% if not loop.last %} → {% endif %}{% endfor %}</p>
+    {% if findings %}<div class="alert alert-warn mt-2"><strong>{{ t('redaction.findings_title') }}</strong><ul class="small">{% for f in findings %}<li>{{ t('redaction.kind_' ~ f.kind) if ('redaction.kind_' ~ f.kind) != t('redaction.kind_' ~ f.kind) else f.kind }} — <code>{{ f.sample }}</code></li>{% endfor %}</ul></div>{% endif %}
+  </div>
+
+  <h2>{{ t('publication.text') }}</h2>
+  <div class="narrative">{{ pub.body_redacted }}</div>
+  {% if pub.body_redacted_bn %}<h3 lang="bn">{{ pub.headline_bn or '' }}</h3><div class="narrative" lang="bn">{{ pub.body_redacted_bn }}</div>{% endif %}
+
+  <h3>{{ t('publication.reviews') }}</h3>
+  <ul class="timeline">{% for r in pub.reviews|reverse %}<li class="is-status"><time>{{ r.created_at|dt }}</time><strong>{{ t('stage.' ~ r.stage) }} · {{ t('publication.' ~ r.decision) }}</strong> · {{ r.reviewer.name }}<br><span class="small">{{ r.notes }}</span></li>{% else %}<li class="muted small">{{ t('publication.no_reviews') }}</li>{% endfor %}</ul>
+
+  <h3>{{ t('ror.title') }}</h3>
+  {% for r in pub.responses %}<div class="note"><div class="note__meta">{{ r.offered_at|dt }} · {{ r.recorded_by.name }}</div><strong>{{ r.party_description }}</strong>{% if r.response_text %}<p>{{ r.response_text }}</p><span class="small muted">{{ t('ror.received') }} {{ r.received_at|dt }} · {{ t('ror.publish') }}: {{ t('ui.yes') if r.publish_response else t('ui.no') }}</span>{% else %}<p class="small muted">{{ t('ror.awaiting') }}</p>{% endif %}</div>{% else %}<p class="muted small">{{ t('ror.none') }}</p>{% endfor %}
+
+  <h3>{{ t('correction.title') }}</h3>
+  {% for c in pub.corrections %}<div class="note"><div class="note__meta">{{ c.created_at|dt }} · {{ c.author.name }} · {{ t('correction.' ~ c.kind) }}</div>{{ c.text }}</div>{% else %}<p class="muted small">{{ t('correction.none') }}</p>{% endfor %}
+
+  <h3>{{ t('social.title') }}</h3>
+  <p class="small muted">{{ t('social.help') }}</p>
+  {% for d in pub.social_drafts %}<div class="note"><div class="note__meta">{{ t('channel.' ~ d.channel) }} · <span class="badge badge-muted">{{ t('social_status.' ~ d.status) }}</span> · {{ d.drafted_by.name }}{% if d.approved_by %} · {{ t('social.approved_by') }} {{ d.approved_by.name }}{% endif %}</div><p class="prewrap">{{ d.text }}</p>
+    {% if d.posted_url %}<p class="small">{{ t('social.posted_at') }} <a href="{{ d.posted_url }}" rel="noopener noreferrer">{{ d.posted_url }}</a> · {{ d.posted_confirmed_by.name }} · {{ d.posted_confirmed_at|dt }}</p>{% endif %}
+    <div class="cluster">
+      {% if d.status == 'drafted' and current_user.can(P.SOCIAL_APPROVE) and d.drafted_by_id != current_user.id %}<form method="post" action="{{ url_for('workspace.social_approve', draft_id=d.id) }}">{{ empty_form.hidden_tag() }}<button class="btn btn-ghost btn-sm">{{ t('social.approve') }}</button></form>{% endif %}
+      {% if d.status == 'approved' %}<form method="post" action="{{ url_for('workspace.social_export', draft_id=d.id) }}">{{ empty_form.hidden_tag() }}<button class="btn btn-ghost btn-sm">{{ t('social.export') }}</button></form>{% endif %}
+      {% if d.status in ('approved','exported') and current_user.can(P.SOCIAL_CONFIRM) %}<form method="post" action="{{ url_for('workspace.social_confirm', draft_id=d.id) }}" class="cluster">{{ confirm_form.hidden_tag() }}<input type="url" name="url" placeholder="https://…" required class="input w-auto"><button class="btn btn-ghost btn-sm">{{ t('social.confirm_posted') }}</button></form>{% endif %}
+    </div></div>{% else %}<p class="muted small">{{ t('social.none') }}</p>{% endfor %}
+</div>
+
+<div class="stack">
+  {% if pub.stage in ('draft', 'consent_safety_review', 'source_assessment', 'redaction', 'editorial_review', 'legal_review', 'approved') and current_user.can(P.PUB_DRAFT) %}
+  <details class="panel-details" {% if pub.stage == 'draft' %}open{% endif %}><summary>{{ t('publication.edit_title') }}</summary><div class="panel-body">
+    <p class="small muted">{{ t('publication.edit_warning') }}</p>
+    <form method="post" action="{{ url_for('workspace.publication_edit', pub_id=pub.id) }}" novalidate>
+      {{ edit_form.hidden_tag() }}{{ field(edit_form.kind) }}{{ field(edit_form.label) }}{{ field(edit_form.headline) }}{{ field(edit_form.headline_bn) }}{{ field(edit_form.body, rows=10) }}{{ field(edit_form.body_bn, rows=10) }}{{ checkbox(edit_form.legal_review_required) }}
+      <button class="btn btn-primary btn-sm">{{ t('ui.save') }}</button>
+    </form>
+    {% if pub.stage == 'draft' %}<form class="mt-2" method="post" action="{{ url_for('workspace.publication_submit', pub_id=pub.id) }}">{{ empty_form.hidden_tag() }}<button class="btn btn-secondary btn-sm">{{ t('publication.submit_review') }}</button></form>{% endif %}
+  </div></details>
+  {% endif %}
+
+  {% if pub.stage == 'consent_safety_review' and current_user.can(P.PUB_SAFETY_REVIEW) %}
+  <details class="panel-details" open><summary>{{ t('stage.consent_safety_review') }}</summary><div class="panel-body">
+    <p class="small">{{ t('publication.consent_safety_help') }}</p>
+    {% if pub.case %}<dl class="kv small"><dt>{{ t('case.consent_publication') }}</dt><dd>{{ t('ui.yes') if pub.case.consent_publication else t('ui.no') }}</dd><dt>{{ t('case.child_flag') }}</dt><dd>{{ t('ui.yes') if pub.case.child_safety_flag else t('ui.no') }}</dd><dt>{{ t('case.safety_flag') }}</dt><dd>{{ t('ui.yes') if pub.case.safety_flag else t('ui.no') }}</dd></dl>{% endif %}
+    <form method="post" action="{{ url_for('workspace.publication_review', pub_id=pub.id, stage='consent_safety_review') }}">{{ review_form.hidden_tag() }}{{ field(review_form.decision) }}{{ field(review_form.notes, rows=3) }}<button class="btn btn-primary btn-sm">{{ t('publication.record_decision') }}</button></form>
+  </div></details>
+  {% endif %}
+
+  {% if pub.stage == 'source_assessment' and current_user.can(P.PUB_SOURCE_REVIEW) %}
+  <details class="panel-details" open><summary>{{ t('stage.source_assessment') }}</summary><div class="panel-body">
+    <p class="small">{{ t('publication.source_help') }}</p>
+    <form method="post" action="{{ url_for('workspace.publication_review', pub_id=pub.id, stage='source_assessment') }}">{{ review_form.hidden_tag() }}{{ checkbox(review_form.conflict_checked, help='publication.conflict_help') }}{{ checkbox(review_form.right_of_response, help='publication.ror_help') }}{{ field(review_form.decision) }}{{ field(review_form.notes, rows=3) }}<button class="btn btn-primary btn-sm">{{ t('publication.record_decision') }}</button></form>
+  </div></details>
+  {% endif %}
+
+  {% if pub.stage == 'redaction' and current_user.can(P.PUB_REDACT) %}
+  <details class="panel-details" open><summary>{{ t('stage.redaction') }}</summary><div class="panel-body">
+    <p class="small">{{ t('redaction.help') }}</p>
+    <form method="post" action="{{ url_for('workspace.publication_redaction', pub_id=pub.id) }}">{{ redaction_form.hidden_tag() }}
+      {% for k in checklist %}{{ checkbox(redaction_form[k]) }}{% endfor %}
+      {{ field(redaction_form.notes, rows=2) }}<button class="btn btn-primary btn-sm">{{ t('redaction.confirm_button') }}</button></form>
+  </div></details>
+  {% endif %}
+
+  {% if pub.stage == 'editorial_review' and current_user.can(P.PUB_EDITORIAL_APPROVE) %}
+  <details class="panel-details" open><summary>{{ t('stage.editorial_review') }}</summary><div class="panel-body">
+    <p class="small">{{ t('publication.editorial_help') }}</p>
+    {% if pub.drafted_by_id == current_user.id %}<p class="alert alert-warn small">{{ t('publication.error_two_person') }}</p>{% endif %}
+    <form method="post" action="{{ url_for('workspace.publication_review', pub_id=pub.id, stage='editorial_review') }}">{{ review_form.hidden_tag() }}{{ field(review_form.decision) }}{{ field(review_form.notes, rows=3) }}<button class="btn btn-primary btn-sm">{{ t('publication.record_decision') }}</button></form>
+  </div></details>
+  {% endif %}
+
+  {% if pub.stage == 'legal_review' and current_user.can(P.PUB_LEGAL_REVIEW) %}
+  <details class="panel-details" open><summary>{{ t('stage.legal_review') }}</summary><div class="panel-body">
+    <form method="post" action="{{ url_for('workspace.publication_review', pub_id=pub.id, stage='legal_review') }}">{{ review_form.hidden_tag() }}{{ field(review_form.decision) }}{{ field(review_form.notes, rows=3) }}<button class="btn btn-primary btn-sm">{{ t('publication.record_decision') }}</button></form>
+  </div></details>
+  {% endif %}
+
+  {% if pub.stage == 'approved' and current_user.can(P.PUB_PUBLISH) %}
+  <div class="card card--green"><h3>{{ t('publication.ready') }}</h3><p class="small">{{ t('publication.publish_help') }}</p><form method="post" action="{{ url_for('workspace.publication_publish', pub_id=pub.id) }}" data-once>{{ empty_form.hidden_tag() }}<button class="btn btn-primary">{{ t('publication.publish_button') }}</button></form></div>
+  {% endif %}
+
+  {% if pub.stage == 'published' %}
+    {% if current_user.can(P.PUB_CORRECT) %}
+    <details class="panel-details"><summary>{{ t('correction.add_title') }}</summary><div class="panel-body"><form method="post" action="{{ url_for('workspace.publication_correction', pub_id=pub.id) }}">{{ correction_form.hidden_tag() }}{{ field(correction_form.kind) }}{{ field(correction_form.text, rows=3) }}{{ field(correction_form.text_bn, rows=3) }}<button class="btn btn-primary btn-sm">{{ t('correction.add_button') }}</button></form></div></details>
+    {% endif %}
+    {% if current_user.can(P.SOCIAL_DRAFT) %}
+    <details class="panel-details"><summary>{{ t('social.add_title') }}</summary><div class="panel-body"><form method="post" action="{{ url_for('workspace.social_new', pub_id=pub.id) }}">{{ social_form.hidden_tag() }}{{ field(social_form.channel) }}{{ field(social_form.text, rows=4, help='social.text_help') }}<button class="btn btn-primary btn-sm">{{ t('social.add_button') }}</button></form></div></details>
+    {% endif %}
+    {% if current_user.can(P.PUB_WITHDRAW) %}
+    <details class="panel-details"><summary>{{ t('publication.withdraw_title') }}</summary><div class="panel-body"><form method="post" action="{{ url_for('workspace.publication_withdraw', pub_id=pub.id) }}">{{ reason_form.hidden_tag() }}{{ field(reason_form.reason, rows=2) }}<button class="btn btn-danger btn-sm">{{ t('publication.withdraw_button') }}</button></form></div></details>
+    {% endif %}
+  {% endif %}
+
+  {% if current_user.can_any(P.PUB_SOURCE_REVIEW, P.PUB_EDITORIAL_APPROVE) and pub.stage not in ('withdrawn', 'rejected') %}
+  <details class="panel-details"><summary>{{ t('ror.add_title') }}</summary><div class="panel-body"><form method="post" action="{{ url_for('workspace.publication_response', pub_id=pub.id) }}">{{ ror_form.hidden_tag() }}{{ field(ror_form.party_description, help='ror.party_help') }}{{ field(ror_form.response_text, rows=3) }}{{ checkbox(ror_form.publish_response) }}<button class="btn btn-ghost btn-sm">{{ t('ui.save') }}</button></form></div></details>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

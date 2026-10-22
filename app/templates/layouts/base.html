@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="{{ current_locale }}" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f1e8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141617" media="(prefers-color-scheme: dark)">
+  <meta name="referrer" content="no-referrer">
+  {% block robots %}{% endblock %}
+  <title>{% block title %}{{ t('site.name') }}{% endblock %}</title>
+  <link rel="manifest" href="{{ url_for('public.manifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&family=Noto+Serif+Bengali:wght@500;600&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=1">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}" data-locale="{{ current_locale }}">
+<a class="skip-link" href="#main">{{ t('a11y.skip') }}</a>
+<div id="offline-banner" class="offline-banner" role="status" hidden>{{ t('state.offline') }}</div>
+<header class="site-header">
+  <div class="container site-header__row">
+    <a class="brand" href="{{ url_for('public.home') }}" aria-label="{{ t('site.name') }}">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="28" height="28">
+      <span class="brand__name">{{ t('site.name') }}</span>
+    </a>
+    <nav class="site-nav" aria-label="{{ t('nav.primary') }}">
+      <input type="checkbox" id="nav-toggle" class="site-nav__toggle" aria-hidden="true">
+      <label for="nav-toggle" class="site-nav__button" aria-label="{{ t('nav.menu') }}"><span></span></label>
+      <ul class="site-nav__list">
+        <li><a href="{{ url_for('public.page', slug='get-help') }}">{{ t('nav.get_help') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='report-wrongdoing') }}">{{ t('nav.report') }}</a></li>
+        <li><a href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='awareness') }}">{{ t('nav.awareness') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='investigations') }}">{{ t('nav.investigations') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='live-support') }}">{{ t('nav.live_support') }}</a></li>
+        <li class="site-nav__more">
+          <details>
+            <summary>{{ t('nav.more') }}</summary>
+            <ul>
+              <li><a href="{{ url_for('public.page', slug='legal-help') }}">{{ t('nav.legal_help') }}</a></li>
+              <li><a href="{{ url_for('public.page', slug='digital-safety') }}">{{ t('nav.digital_safety') }}</a></li>
+              <li><a href="{{ url_for('public.page', slug='about') }}">{{ t('nav.about') }}</a></li>
+              <li><a href="{{ url_for('public.page', slug='safeguarding') }}">{{ t('nav.safeguarding') }}</a></li>
+              <li><a href="{{ url_for('public.page', slug='contact') }}">{{ t('nav.contact') }}</a></li>
+            </ul>
+          </details>
+        </li>
+        <li class="site-nav__lang">
+          {% for code in LANGUAGES %}{% if code != current_locale %}
+            <a href="{{ url_for('public.set_language', code=code, next=request.full_path if request.query_string else request.path) }}" lang="{{ code }}" hreflang="{{ code }}" rel="nofollow">{{ LANGUAGE_NAMES[code] }}</a>
+          {% endif %}{% endfor %}
+        </li>
+        <li class="site-nav__auth">
+          {% if current_user.is_authenticated %}
+            {% if is_staff %}<a href="{{ url_for('workspace.home') }}">{{ t('nav.workspace') }}</a>{% else %}<a href="{{ url_for('public.my_reports') }}">{{ t('nav.my_reports') }}</a>{% endif %}
+            <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="link" type="submit">{{ t('nav.logout') }}</button></form>
+          {% else %}
+            <a href="{{ url_for('auth.login') }}">{{ t('nav.login') }}</a>
+          {% endif %}
+        </li>
+      </ul>
+    </nav>
+    <form method="post" action="{{ url_for('public.quick_exit') }}" class="quick-exit" title="{{ t('a11y.quick_exit_help') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-danger btn-sm" id="quick-exit">{{ t('nav.quick_exit') }}</button>
+    </form>
+  </div>
+</header>
+<main id="main" class="{% block main_class %}container page{% endblock %}" tabindex="-1">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes" role="status" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div>
+      <p class="site-footer__identity"><strong>{{ t('site.identity') }}</strong><br><span lang="bn">{{ t('site.principle') }}</span></p>
+      <p class="muted small">{{ t('site.secular') }}</p>
+      <p class="muted small">{{ t('site.no_dispatch') }}</p>
+    </div>
+    <nav aria-label="{{ t('nav.policies') }}">
+      <ul class="site-footer__links">
+        <li><a href="{{ url_for('public.page', slug='about') }}">{{ t('nav.about') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='safeguarding') }}">{{ t('nav.safeguarding') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='privacy') }}">{{ t('nav.privacy') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='editorial-policy') }}">{{ t('nav.editorial_policy') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='corrections') }}">{{ t('nav.corrections') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='complaints') }}">{{ t('nav.complaints') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='accessibility') }}">{{ t('nav.accessibility') }}</a></li>
+        <li><a href="{{ url_for('public.page', slug='contact') }}">{{ t('nav.contact') }}</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
+<script src="{{ url_for('static', filename='js/app.js') }}?v=1" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

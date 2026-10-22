@@ -1,0 +1,21 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{{ t('access.identity_title') }} · {{ case.reference }}{% endblock %}
+{% block workspace %}
+<p class="eyebrow">{{ case.reference }}</p>
+<h1>{{ t('access.identity_title') }}</h1>
+<div class="alert alert-error"><strong>{{ t('access.logged_title') }}</strong> {{ t('access.logged_text') }}{% if break_glass %} <strong>{{ t('access.break_glass_marker') }}</strong>{% endif %}<br><span class="small">{{ t('access.reason') }}: {{ reason }}</span></div>
+{% if identity %}
+<dl class="identity-box kv">
+  <dt>{{ t('report.identity_name') }}</dt><dd>{{ identity.get('name') or '—' }}</dd>
+  <dt>{{ t('report.identity_phone') }}</dt><dd>{{ identity.get('phone') or '—' }}</dd>
+  <dt>{{ t('report.identity_email') }}</dt><dd>{{ identity.get('email') or '—' }}</dd>
+  <dt>{{ t('report.safe_hours') }}</dt><dd>{{ identity.get('safe_hours') or '—' }}</dd>
+  <dt>{{ t('report.do_not_contact') }}</dt><dd>{{ identity.get('do_not_contact') or '—' }}</dd>
+  <dt>{{ t('report.safe_contact_notes') }}</dt><dd>{{ identity.get('safe_contact_notes') or '—' }}</dd>
+</dl>
+<p class="small muted mt-3">{{ t('access.identity_rules') }}</p>
+{% else %}
+<p>{{ t('access.identity_none') }}</p>
+{% endif %}
+<p><a class="btn btn-ghost" href="{{ url_for('workspace.case_detail', reference=case.reference) }}">{{ t('ui.back_to_case') }}</a></p>
+{% endblock %}

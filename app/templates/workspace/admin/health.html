@@ -1,0 +1,8 @@
+{% extends "layouts/workspace.html" %}
+{% block title %}{{ t('ws.health') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.health') }}</h1><p class="muted">{{ t('health.env') }}: <strong>{{ env }}</strong></p></div></div>
+<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('health.check') }}</th><th>{{ t('health.state') }}</th><th>{{ t('health.detail') }}</th></tr></thead>
+<tbody>{% for name, ok, detail in checks %}<tr><td>{{ t('health.' ~ name) }}</td><td>{% if ok %}<span class="badge badge-ok">{{ t('health.ok') }}</span>{% else %}<span class="badge badge-warn">{{ t('health.attention') }}</span>{% endif %}</td><td class="small mono">{{ detail }}</td></tr>{% endfor %}</tbody></table></div>
+<div class="stats mt-3">{% for k, v in counts.items() %}<div class="stat"><span class="stat__value">{{ v|bn_digits }}</span><span class="stat__label">{{ t('health.count_' ~ k) }}</span></div>{% endfor %}</div>
+{% endblock %}

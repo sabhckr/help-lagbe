@@ -1,0 +1,27 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import level, status, flag, empty, pagination as paginate %}
+{% block title %}{{ t('ws.cases') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><h1>{{ t('ws.cases') }}</h1></div>
+<form method="get" class="toolbar" role="search">
+  <label class="sr-only" for="f-status">{{ t('case.status') }}</label>
+  <select name="status" id="f-status"><option value="">{{ t('case.all_open') }}</option>{% for s in statuses %}<option value="{{ s }}" {% if request.args.get('status') == s %}selected{% endif %}>{{ t('status.' ~ s) }}</option>{% endfor %}</select>
+  <label class="sr-only" for="f-sev">{{ t('case.severity') }}</label>
+  <select name="severity" id="f-sev"><option value="">{{ t('severity.any') }}</option>{% for n in (4,3,2,1) %}<option value="{{ n }}" {% if request.args.get('severity') == n|string %}selected{% endif %}>{{ t('severity.short') }} {{ n }}</option>{% endfor %}</select>
+  {% if current_user.can(P.CASE_VIEW_METADATA_ANY) %}<select name="department"><option value="">{{ t('case.all_departments') }}</option>{% for d in P.DEPARTMENTS %}<option value="{{ d }}" {% if request.args.get('department') == d %}selected{% endif %}>{{ t('dept.' ~ d) }}</option>{% endfor %}</select>{% endif %}
+  <label class="check small"><input type="checkbox" name="safety" value="1" {% if request.args.get('safety') == '1' %}checked{% endif %}> {{ t('case.safety_only') }}</label>
+  <label class="check small"><input type="checkbox" name="mine" value="1" {% if request.args.get('mine') == '1' %}checked{% endif %}> {{ t('case.mine_only') }}</label>
+  <label class="check small"><input type="checkbox" name="scope" value="all" {% if request.args.get('scope') == 'all' %}checked{% endif %}> {{ t('case.include_closed') }}</label>
+  <button class="btn btn-ghost btn-sm" type="submit">{{ t('ui.filter') }}</button>
+</form>
+{% if pagination.items %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('case.reference') }}</th><th>{{ t('case.category') }}</th><th>{{ t('case.department') }}</th><th>{{ t('case.severity') }}</th><th>{{ t('case.status') }}</th><th>{{ t('case.received') }}</th></tr></thead>
+  <tbody>{% for c in pagination.items %}<tr>
+    <td><a class="row-link mono" href="{{ url_for('workspace.case_detail', reference=c.reference) }}">{{ c.reference }}</a><br>{{ flag(c) }}</td>
+    <td>{{ t('category.' ~ c.category) }}</td><td>{{ t('dept.' ~ c.department) if c.department else '—' }}</td><td>{{ level(c.severity_level) }}</td><td>{{ status(c.status) }}</td><td class="nowrap">{{ c.created_at|dt }}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{{ paginate(pagination, 'workspace.cases') }}
+{% else %}{{ empty('ws.no_cases_title', 'ws.no_cases_text') }}{% endif %}
+{% endblock %}

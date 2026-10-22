@@ -1,0 +1,33 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox %}
+{% block title %}{{ conv.reference }} · {{ t('ws.support') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><p class="eyebrow">{{ t('conv_status.' ~ conv.status) }}{% if conv.safety_flag %} · <span class="badge badge-danger">{{ t('support.safety_flag') }}</span>{% endif %}</p><h1 class="mono">{{ conv.reference }}</h1><p class="small muted">{{ t('support_topic.' ~ (conv.topic or 'other')) }} · {{ LANGUAGE_NAMES.get(conv.language, conv.language) }} · {{ conv.started_at|dt }}{% if conv.agent %} · {{ t('support.agent') }}: {{ conv.agent.name }}{% endif %}{% if conv.escalated_to %} · {{ t('support.escalated_to') }} {{ conv.escalated_to.name }}{% endif %}{% if conv.linked_case %} · <a class="mono" href="{{ url_for('workspace.case_detail', reference=conv.linked_case.reference) }}">{{ conv.linked_case.reference }}</a>{% endif %}</p></div>
+<div class="cluster">
+  {% if conv.status == 'waiting' and current_user.can(P.SUPPORT_CHAT) %}<form method="post" action="{{ url_for('workspace.support_accept', reference=conv.reference) }}">{{ empty_form.hidden_tag() }}<button class="btn btn-primary btn-sm">{{ t('support.accept') }}</button></form>{% endif %}
+  {% if conv.status != 'closed' %}<form method="post" action="{{ url_for('workspace.support_close', reference=conv.reference) }}">{{ empty_form.hidden_tag() }}<button class="btn btn-ghost btn-sm">{{ t('support.close') }}</button></form>{% endif %}
+</div></div>
+<div class="alert alert-info small">{{ t('support.agent_guidance') }}</div>
+<div class="grid grid-2 items-start">
+<div>
+  <div class="chat" data-chat data-side="agent" data-poll="{{ url_for('workspace.support_messages', reference=conv.reference) }}" data-send="{{ url_for('workspace.support_send', reference=conv.reference) }}" data-last="{{ conv.messages[-1].id if conv.messages else 0 }}">
+    <div class="chat__log" role="log" aria-live="polite">{% for m in conv.messages %}<div class="chat__bubble chat__bubble--{{ 'visitor' if m.sender_type == 'agent' else 'agent' if m.sender_type == 'visitor' else 'system' }}">{{ t(m.body) if m.sender_type == 'system' else m.body }}{% if m.sender_type != 'system' %}<time>{{ m.created_at.strftime('%H:%M') }}{% if m.sender %} · {{ m.sender.name }}{% endif %}</time>{% endif %}</div>{% endfor %}</div>
+    {% if conv.status == 'active' and (conv.agent_id == current_user.id or conv.escalated_to_id == current_user.id or current_user.can(P.SUPPORT_SUPERVISE)) %}
+    <form method="post" action="{{ url_for('workspace.support_send', reference=conv.reference) }}" class="chat__form">{{ form.hidden_tag() }}<label class="sr-only" for="body">{{ t('support.message') }}</label><textarea name="body" id="body" rows="1" maxlength="4000" placeholder="{{ t('support.message_placeholder') }}"></textarea><button class="btn btn-primary" type="submit">{{ t('support.send') }}</button></form>
+    {% endif %}
+  </div>
+  <p id="chat-status" class="small muted" aria-live="polite"></p>
+</div>
+<div class="stack">
+  {% if conv.status == 'active' and conv.agent_id == current_user.id and current_user.can(P.SUPPORT_ESCALATE) and not conv.escalated_at %}
+  <details class="panel-details"><summary>{{ t('support.escalate_title') }}</summary><div class="panel-body"><p class="small">{{ t('support.escalate_help') }}</p><form method="post" action="{{ url_for('workspace.support_escalate', reference=conv.reference) }}">{{ escalate_form.hidden_tag() }}{{ field(escalate_form.reason, rows=3) }}<button class="btn btn-danger btn-sm">{{ t('support.escalate_button') }}</button></form></div></details>
+  {% endif %}
+  {% if conv.agent_id == current_user.id or current_user.can(P.SUPPORT_SUPERVISE) %}
+  <details class="panel-details"><summary>{{ t('support.follow_up_title') }}</summary><div class="panel-body"><p class="small">{{ t('support.follow_up_help') }}</p><form method="post" action="{{ url_for('workspace.support_follow_up', reference=conv.reference) }}">{{ follow_form.hidden_tag() }}{{ checkbox(follow_form.consent) }}{{ field(follow_form.note, rows=3) }}<div class="cluster"><button class="btn btn-primary btn-sm">{{ t('ui.save') }}</button>{% if conv.consent_follow_up %}<button class="btn btn-ghost btn-sm" name="done" value="1">{{ t('support.follow_up_done') }}</button>{% endif %}</div></form></div></details>
+  <details class="panel-details"><summary>{{ t('support.link_case_title') }}</summary><div class="panel-body"><form method="post" action="{{ url_for('workspace.support_link_case', reference=conv.reference) }}">{{ empty_form.hidden_tag() }}<div class="field"><label for="case_reference">{{ t('case.reference') }}</label><input type="text" name="case_reference" id="case_reference" class="mono" list="linkable"><datalist id="linkable">{% for c in linkable %}<option value="{{ c.reference }}">{{ t('category.' ~ c.category) }}</option>{% endfor %}</datalist></div><button class="btn btn-ghost btn-sm">{{ t('support.link_case_button') }}</button></form><p class="small muted">{{ t('support.link_case_help') }} <a href="{{ url_for('report.new') }}">{{ t('nav.report') }}</a></p></div></details>
+  {% endif %}
+  {% if conv.escalation_reason %}<div class="card card--danger"><strong>{{ t('support.escalated_badge') }}</strong><p class="small">{{ conv.escalation_reason }}</p></div>{% endif %}
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>document.body.dataset.heartbeat = "{{ url_for('workspace.support_heartbeat') }}";</script>{% endblock %}

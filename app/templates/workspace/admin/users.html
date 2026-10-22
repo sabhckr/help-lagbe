@@ -1,0 +1,33 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% block title %}{{ t('ws.staff') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><h1>{{ t('ws.staff') }}</h1></div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('auth.name') }}</th><th>{{ t('auth.email') }}</th><th>{{ t('admin.role') }}</th><th>{{ t('admin.mfa') }}</th><th>{{ t('admin.last_login') }}</th><th>{{ t('ui.actions') }}</th></tr></thead>
+  <tbody>{% for u in users %}<tr>
+    <td>{{ u.name }}{% if not u.active %} <span class="badge badge-muted">{{ t('admin.inactive') }}</span>{% endif %}</td><td class="mono small">{{ u.email }}</td><td><span class="badge badge-role">{{ t('role.' ~ u.role) }}</span></td>
+    <td>{% if u.mfa_enabled %}<span class="badge badge-ok">{{ t('ui.yes') }}</span>{% elif u.is_privileged %}<span class="badge badge-warn">{{ t('admin.mfa_pending') }}</span>{% else %}—{% endif %}</td>
+    <td class="small">{{ u.last_login_at|dt if u.last_login_at else '—' }}</td>
+    <td>
+      <details><summary class="small">{{ t('admin.change_role') }}</summary>
+        <form method="post" action="{{ url_for('workspace.admin_user_role', user_id=u.id) }}" class="stack-sm minw-220">
+          {{ role_form.hidden_tag() }}
+          <div class="field"><label for="role-{{ u.id }}">{{ t('admin.role') }}</label><select name="role" id="role-{{ u.id }}">{% for v,l in role_form.role.choices %}<option value="{{ v }}" {% if v == u.role %}selected{% endif %}>{{ t(l) }}</option>{% endfor %}</select></div>
+          <label class="check"><input type="checkbox" name="active" value="y" {% if u.active %}checked{% endif %}> <span>{{ t('admin.active') }}</span></label>
+          <div class="field"><label for="reason-{{ u.id }}">{{ t('case.reason') }}</label><textarea name="reason" id="reason-{{ u.id }}" rows="2" required></textarea></div>
+          <button class="btn btn-primary btn-sm">{{ t('ui.save') }}</button>
+        </form>
+        {% if u.mfa_enabled %}<form method="post" action="{{ url_for('workspace.admin_user_reset_mfa', user_id=u.id) }}" class="stack-sm mt-1">{{ reason_form.hidden_tag() }}<div class="field"><label for="mfa-reason-{{ u.id }}">{{ t('admin.reset_mfa_reason') }}</label><textarea name="reason" id="mfa-reason-{{ u.id }}" rows="2" required minlength="15"></textarea></div><button class="btn btn-ghost btn-sm">{{ t('admin.reset_mfa') }}</button></form>{% endif %}
+      </details>
+    </td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+<h2>{{ t('admin.create_staff') }}</h2>
+<p class="small muted">{{ t('admin.create_staff_help') }}</p>
+<form method="post" class="card" novalidate data-once>
+  {{ form.hidden_tag() }}
+  <div class="grid grid-2">{{ field(form.name) }}{{ field(form.email, inputmode='email') }}{{ field(form.role) }}{{ field(form.password, autocomplete='new-password', help='auth.password_help') }}</div>
+  <div class="form-actions">{{ submit('admin.create_button') }}</div>
+</form>
+{% endblock %}

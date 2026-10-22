@@ -1,0 +1,24 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% block title %}{{ t('ws.contacts') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.contacts') }}</h1><p class="muted">{{ t('contacts.help') }}</p></div></div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('contacts.kind') }}</th><th>{{ t('contacts.name_en') }}</th><th>{{ t('contacts.number') }}</th><th>{{ t('contacts.verified') }}</th><th>{{ t('ui.actions') }}</th></tr></thead>
+  <tbody>{% for c in contacts %}<tr>
+    <td>{{ t('contact_kind.' ~ c.kind) }}</td><td>{{ c.name_en }}{% if c.name_bn %}<br><span lang="bn" class="small">{{ c.name_bn }}</span>{% endif %}{% if not c.is_active %} <span class="badge badge-muted">{{ t('admin.inactive') }}</span>{% endif %}</td><td class="mono">{{ c.number }}</td>
+    <td>{% if c.verified %}<span class="badge badge-ok">{{ t('contacts.verified') }}</span><br><span class="small muted">{{ c.verified_by.name if c.verified_by else '' }} · {{ c.verified_at|d }}<br>{{ c.verification_note }}</span>{% else %}<span class="badge badge-warn">{{ t('contacts.unverified') }}</span>{% endif %}</td>
+    <td>
+      {% if not c.verified %}<form method="post" action="{{ url_for('workspace.admin_contact_verify', contact_id=c.id) }}" class="stack-sm">{{ verify_form.hidden_tag() }}<div class="field"><label for="vn-{{ c.id }}" class="small">{{ t('contacts.verification_note') }}</label><input type="text" name="verification_note" id="vn-{{ c.id }}" required minlength="5" placeholder="{{ t('contacts.verification_placeholder') }}"></div><button class="btn btn-primary btn-sm">{{ t('contacts.verify_button') }}</button></form>{% endif %}
+      <form method="post" action="{{ url_for('workspace.admin_contact_toggle', contact_id=c.id) }}" class="inline mt-xs">{{ empty_form.hidden_tag() }}<button class="btn btn-ghost btn-sm">{{ t('admin.deactivate') if c.is_active else t('admin.activate') }}</button>{% if c.verified %}<button class="btn btn-ghost btn-sm" name="unverify" value="1">{{ t('contacts.unverify') }}</button>{% endif %}</form>
+    </td>
+  </tr>{% else %}<tr><td colspan="5" class="muted">{{ t('contacts.none') }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<h2>{{ t('contacts.add') }}</h2>
+<form method="post" class="card" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="grid grid-2">{{ field(form.kind) }}{{ field(form.number, inputmode='tel') }}{{ field(form.name_en) }}{{ field(form.name_bn) }}{{ field(form.description_en, rows=2) }}{{ field(form.description_bn, rows=2) }}</div>
+  {{ checkbox(form.is_active) }}
+  <div class="form-actions">{{ submit('contacts.add_button') }}</div>
+</form>
+{% endblock %}

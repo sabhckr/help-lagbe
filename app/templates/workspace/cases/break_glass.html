@@ -1,0 +1,15 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import level, status, flag %}
+{% block title %}{{ t('case.break_glass_title') }} · {{ case.reference }}{% endblock %}
+{% block workspace %}
+<p class="eyebrow">{{ case.reference }}</p>
+<h1>{{ t('case.break_glass_title') }}</h1>
+<div class="alert alert-error"><strong>{{ t('access.logged_title') }}</strong> {{ t('case.break_glass_logged') }}<br><span class="small">{{ t('access.reason') }}: {{ reason }}</span></div>
+<div class="cluster">{{ level(case.severity_level) }} {{ status(case.status) }} {{ flag(case) }}</div>
+<h2>{{ case.title }}</h2>
+<div class="narrative">{{ case.narrative }}</div>
+<h3>{{ t('case.notes') }}</h3>
+{% for n in notes|reverse %}<div class="note"><div class="note__meta">{{ n.created_at|dt }} · {{ n.author.name }} · {{ t('visibility.' ~ n.visibility) }}</div>{{ n.body }}</div>{% else %}<p class="muted small">{{ t('case.no_notes') }}</p>{% endfor %}
+<p class="small muted">{{ t('case.break_glass_no_identity') }}</p>
+<p><a class="btn btn-ghost" href="{{ url_for('workspace.case_detail', reference=case.reference) }}">{{ t('ui.back_to_case') }}</a></p>
+{% endblock %}

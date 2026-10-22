@@ -1,0 +1,8 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field %}
+{% block title %}{{ conv.reference }} · {{ t('ws.support') }}{% endblock %}
+{% block workspace %}
+<h1 class="mono">{{ conv.reference }}</h1>
+<div class="alert alert-warn">{{ t('support.supervisor_reason_help') }}</div>
+<form method="post" action="{{ url_for('workspace.support_supervisor_reason', reference=conv.reference) }}" class="card narrow">{{ form.hidden_tag() }}{{ field(form.reason, rows=3) }}<button class="btn btn-danger">{{ t('support.supervisor_open') }}</button> <a class="btn btn-ghost" href="{{ url_for('workspace.support_queue') }}">{{ t('ui.cancel') }}</a></form>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, submit %}
+{% block title %}{{ t('ws.raise_flag') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<h1>{{ t('ws.raise_flag') }}</h1>
+<p class="muted">{{ t('moderation.flag_help') }}</p>
+<form method="post" class="card" novalidate data-once>{{ form.hidden_tag() }}<div class="grid grid-2">{{ field(form.target_type) }}{{ field(form.target_id) }}</div>{{ field(form.reason) }}{{ field(form.notes, rows=4) }}<div class="form-actions">{{ submit('moderation.flag_button') }}</div></form>
+{% endblock %}

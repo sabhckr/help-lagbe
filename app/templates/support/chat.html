@@ -1,0 +1,27 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('support.chat_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <div class="page-head">
+    <div><p class="eyebrow">{{ t('support.chat_eyebrow') }}</p><h1>{{ t('support.chat_title') }}</h1></div>
+    <form method="post" action="{{ url_for('support.leave', reference=conv.reference) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-danger btn-sm" type="submit">{{ t('support.leave_button') }}</button></form>
+  </div>
+  <p class="small muted">{{ t('support.chat_privacy') }} <span class="mono">{{ conv.reference }}</span></p>
+  <p id="chat-status" class="small" aria-live="polite">{% if conv.status == 'waiting' %}{{ t('support.waiting_status') }}{% elif conv.status == 'closed' %}{{ t('support.msg_closed') }}{% endif %}</p>
+  <div class="chat" data-chat data-side="visitor" data-poll="{{ url_for('support.messages', reference=conv.reference) }}" data-send="{{ url_for('support.send', reference=conv.reference) }}" data-last="{{ conv.messages[-1].id if conv.messages else 0 }}">
+    <div class="chat__log" role="log" aria-live="polite" aria-label="{{ t('support.chat_log') }}">
+      {% for m in conv.messages %}
+        <div class="chat__bubble chat__bubble--{{ m.sender_type }}">{{ t(m.body) if m.sender_type == 'system' else m.body }}{% if m.sender_type != 'system' %}<time>{{ m.created_at.strftime('%H:%M') }}</time>{% endif %}</div>
+      {% endfor %}
+    </div>
+    <form method="post" action="{{ url_for('support.send', reference=conv.reference) }}" class="chat__form">
+      {{ form.hidden_tag() }}
+      <label class="sr-only" for="body">{{ t('support.message') }}</label>
+      <textarea name="body" id="body" rows="1" maxlength="4000" placeholder="{{ t('support.message_placeholder') }}" {% if conv.status == 'closed' %}disabled{% endif %}></textarea>
+      <button class="btn btn-primary" type="submit" {% if conv.status == 'closed' %}disabled{% endif %}>{{ t('support.send') }}</button>
+    </form>
+  </div>
+  <p class="small muted mt-3">{{ t('support.no_dispatch') }}</p>
+</div>
+{% endblock %}

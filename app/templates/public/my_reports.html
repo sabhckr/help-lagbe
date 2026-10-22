@@ -1,0 +1,12 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import status, empty %}
+{% block title %}{{ t('nav.my_reports') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ t('nav.my_reports') }}</h1>
+  <p class="lead">{{ t('my_reports.lead') }}</p>
+  {% if cases %}<ul class="stack-sm list-plain">{% for c in cases %}<li class="card"><span class="mono">{{ c.reference }}</span> · {{ t('category.' ~ c.category) }} · {{ status(c.status) }}<br><span class="small muted">{{ c.created_at|dt }}</span> · <a href="{{ url_for('track.index') }}">{{ t('my_reports.open_with_key') }}</a></li>{% endfor %}</ul>{% else %}{{ empty('my_reports.none_title', 'my_reports.none_text', url_for('report.new'), 'nav.report') }}{% endif %}
+  <p class="small muted mt-5">{{ t('my_reports.note') }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "layouts/base.html" %}
+{% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block body_class %}workspace{% endblock %}
+{% block main_class %}container workspace-layout{% endblock %}
+{% block content %}
+<aside class="workspace-nav" aria-label="{{ t('ws.nav') }}">
+  <p class="workspace-nav__role"><span class="muted small">{{ t('ws.signed_in_as') }}</span><br><strong>{{ current_user.name }}</strong><br><span class="badge badge-role">{{ t('role.' ~ current_user.role) }}</span></p>
+  <ul>
+    <li><a href="{{ url_for('workspace.home') }}" {% if request.endpoint == 'workspace.home' %}aria-current="page"{% endif %}>{{ t('ws.overview') }}</a></li>
+    {% if current_user.can(P.CASE_VIEW_QUEUE) or current_user.can(P.CASE_VIEW_METADATA_ANY) %}
+    <li><a href="{{ url_for('workspace.cases') }}" {% if request.endpoint and request.endpoint.startswith('workspace.case') %}aria-current="page"{% endif %}>{{ t('ws.cases') }}</a></li>
+    {% endif %}
+    {% if current_user.can_any(P.SUPPORT_QUEUE, P.SUPPORT_SUPERVISE) %}
+    <li><a href="{{ url_for('workspace.support_queue') }}" {% if request.endpoint and request.endpoint.startswith('workspace.support') %}aria-current="page"{% endif %}>{{ t('ws.support') }}</a></li>
+    {% endif %}
+    {% if current_user.can(P.PUB_VIEW_PIPELINE) %}
+    <li><a href="{{ url_for('workspace.publications') }}" {% if request.endpoint and request.endpoint.startswith('workspace.publication') %}aria-current="page"{% endif %}>{{ t('ws.publications') }}</a></li>
+    {% endif %}
+    {% if current_user.can_any(P.MOD_QUEUE, P.PUB_CORRECT, P.CASE_APPEAL_HANDLE) %}
+    <li><a href="{{ url_for('workspace.requests_queue') }}" {% if request.endpoint and request.endpoint.startswith('workspace.request') %}aria-current="page"{% endif %}>{{ t('ws.requests') }}</a></li>
+    {% endif %}
+    {% if current_user.can(P.MOD_QUEUE) %}
+    <li><a href="{{ url_for('workspace.moderation') }}" {% if request.endpoint and request.endpoint.startswith('workspace.moderation') %}aria-current="page"{% endif %}>{{ t('ws.moderation') }}</a></li>
+    {% endif %}
+    {% if current_user.can(P.MOD_FLAG) and not current_user.can(P.MOD_QUEUE) %}
+    <li><a href="{{ url_for('workspace.flag_new') }}">{{ t('ws.raise_flag') }}</a></li>
+    {% endif %}
+    {% if current_user.can_any(P.ADMIN_USERS, P.ADMIN_CONFIG, P.ADMIN_HEALTH) %}
+    <li class="workspace-nav__group">{{ t('ws.administration') }}</li>
+    {% if current_user.can(P.ADMIN_USERS) %}<li><a href="{{ url_for('workspace.admin_users') }}">{{ t('ws.staff') }}</a></li>{% endif %}
+    {% if current_user.can(P.ADMIN_CONFIG) %}
+    <li><a href="{{ url_for('workspace.admin_departments') }}">{{ t('ws.availability') }}</a></li>
+    <li><a href="{{ url_for('workspace.admin_contacts') }}">{{ t('ws.contacts') }}</a></li>
+    <li><a href="{{ url_for('workspace.admin_settings') }}">{{ t('ws.settings') }}</a></li>
+    <li><a href="{{ url_for('workspace.admin_retention') }}">{{ t('ws.retention') }}</a></li>
+    {% endif %}
+    {% if current_user.can(P.ADMIN_HEALTH) %}<li><a href="{{ url_for('workspace.admin_health') }}">{{ t('ws.health') }}</a></li>{% endif %}
+    {% endif %}
+    {% if current_user.can_any(P.AUDIT_VIEW_ALL, P.AUDIT_VIEW_DEPT) %}
+    <li><a href="{{ url_for('workspace.audit') }}">{{ t('ws.audit') }}</a></li>
+    {% endif %}
+    <li><a href="{{ url_for('workspace.admin_permissions') }}">{{ t('ws.permissions') }}</a></li>
+    <li><a href="{{ url_for('auth.change_password') }}">{{ t('auth.change_password') }}</a></li>
+  </ul>
+</aside>
+<section class="workspace-main">
+  {% block workspace %}{% endblock %}
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, checkbox %}
+{% from "macros/ui.html" import empty %}
+{% block title %}{{ t('ws.moderation') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.moderation') }}</h1><p class="muted">{{ t('moderation.help') }}</p></div><a class="btn btn-ghost" href="{{ url_for('workspace.flag_new') }}">{{ t('ws.raise_flag') }}</a></div>
+<div class="cluster mb-3">{% for s in ('open','actioned','dismissed') %}<a class="chip" href="{{ url_for('workspace.moderation', status=s) }}" {% if status == s %}aria-current="true"{% endif %}>{{ t('flag_status.' ~ s) }}</a>{% endfor %}</div>
+{% for f in flags %}
+<div class="card {% if f.reason in ('threat','doxxing','prohibited_material') %}card--danger{% endif %}">
+  <div class="cluster"><span class="badge badge-warn">{{ t('flag_reason.' ~ f.reason) }}</span><span class="badge badge-muted">{{ t('flag_target.' ~ f.target_type) }} #{{ f.target_id }}</span><span class="small muted">{{ f.created_at|dt }} · {{ f.raised_by.name if f.raised_by else t('audit.public') }}</span></div>
+  <p class="my-1">{{ f.notes }}</p>
+  {% if f.target_type == 'case' %}<p class="small"><a href="{{ url_for('workspace.cases') }}">{{ t('ws.cases') }}</a> → {{ t('moderation.case_id_note') }}</p>{% endif %}
+  {% if f.status == 'open' and current_user.can(P.MOD_ACT) %}
+  <details><summary class="small">{{ t('moderation.act') }}</summary>
+    <form method="post" action="{{ url_for('workspace.flag_act', flag_id=f.id) }}" class="stack-sm">{{ action_form.hidden_tag() }}
+      <div class="field"><label for="dec-{{ f.id }}">{{ t('moderation.decision') }}</label><select name="decision" id="dec-{{ f.id }}"><option value="actioned">{{ t('moderation.actioned') }}</option><option value="dismissed">{{ t('moderation.dismissed') }}</option></select></div>
+      <div class="field"><label for="act-{{ f.id }}">{{ t('moderation.action_taken') }}</label><textarea name="action_taken" id="act-{{ f.id }}" rows="2" required></textarea></div>
+      {% if f.target_type == 'case' %}<label class="check"><input type="checkbox" name="hold_case" value="y"> <span>{{ t('moderation.hold_case') }}</span></label><label class="check"><input type="checkbox" name="mark_spam" value="y"> <span>{{ t('moderation.mark_spam') }}</span></label>{% endif %}
+      <button class="btn btn-primary btn-sm">{{ t('ui.save') }}</button></form></details>
+  {% elif f.status != 'open' %}<p class="small muted">{{ t('flag_status.' ~ f.status) }} · {{ f.handled_by.name if f.handled_by else '' }} · {{ f.handled_at|dt }}<br>{{ f.action_taken }}</p>{% endif %}
+</div>
+{% else %}{{ empty('moderation.none') }}{% endfor %}
+<h2>{{ t('moderation.appeals') }}</h2>
+{% for a in appeals %}
+<div class="card"><div class="small muted">{{ a.reference }} · {{ a.created_at|dt }} · {{ t('flag_reason.' ~ a.flag.reason) }} ({{ t('flag_target.' ~ a.flag.target_type) }} #{{ a.flag.target_id }})</div><p>{{ a.message }}</p>
+  {% if current_user.can(P.MOD_APPEALS) %}<form method="post" action="{{ url_for('workspace.appeal_decide', appeal_id=a.id) }}" class="stack-sm">{{ appeal_form.hidden_tag() }}<div class="field"><label for="ad-{{ a.id }}">{{ t('moderation.decision') }}</label><select name="decision" id="ad-{{ a.id }}"><option value="upheld">{{ t('moderation.upheld') }}</option><option value="rejected">{{ t('moderation.rejected') }}</option></select></div><div class="field"><label for="an-{{ a.id }}">{{ t('moderation.notes') }}</label><textarea name="notes" id="an-{{ a.id }}" rows="2" required></textarea></div><button class="btn btn-primary btn-sm">{{ t('ui.save') }}</button></form>{% endif %}
+</div>
+{% else %}<p class="muted">{{ t('moderation.no_appeals') }}</p>{% endfor %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, submit %}
+{% block title %}{{ t('request.page_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ t('request.page_title') }}</h1>
+  <p class="lead">{{ t('request.lead') }}</p>
+  <form method="post" class="card" novalidate data-once>
+    {{ form.hidden_tag() }}
+    <div class="hp" aria-hidden="true"><label>website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+    {{ field(form.request_type, help='request.type_help') }}
+    {{ field(form.publication_slug, help='request.publication_help') }}
+    {{ field(form.case_reference, help='request.case_reference_help') }}
+    {{ field(form.message, rows=7, maxlength=8000) }}
+    {{ field(form.contact, help='request.contact_help', autocomplete='off') }}
+    <div class="form-actions">{{ submit('request.submit_button') }}</div>
+  </form>
+</div>
+{% endblock %}

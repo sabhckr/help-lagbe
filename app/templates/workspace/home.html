@@ -1,0 +1,58 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import stat, level, status, flag, empty %}
+{% block title %}{{ t('ws.overview') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><p class="eyebrow">{{ t('dept.' ~ (current_user.department or 'administration')) }}</p><h1>{{ t('ws.overview') }}</h1></div></div>
+
+{% if dept_cfg and not dept_cfg.is_staffed %}<div class="alert alert-warn">{{ t('ws.dept_not_staffed') }}</div>{% endif %}
+{% if current_user.must_change_password %}<div class="alert alert-warn">{{ t('ws.must_change_password') }} <a href="{{ url_for('auth.change_password') }}">{{ t('auth.change_password') }}</a></div>{% endif %}
+
+<div class="stats">
+  {{ stat('ws.stat_open', stats.open, url_for('workspace.cases')) }}
+  {{ stat('ws.stat_intake', stats.intake, url_for('workspace.cases', status='submitted')) }}
+  {{ stat('ws.stat_safety', stats.safety, url_for('workspace.cases', safety=1), 'danger' if stats.safety else '') }}
+  {{ stat('ws.stat_unassessed', stats.unassessed, url_for('workspace.cases'), 'warn' if stats.unassessed else '') }}
+  {{ stat('ws.stat_mine', stats.mine, url_for('workspace.cases', mine=1)) }}
+</div>
+
+{% if support_state %}
+<div class="card mt-4">
+  <h2>{{ t('ws.support') }}</h2>
+  <p><span class="availability {{ 'is-open' if support_state.open else 'is-closed' }}">{{ t('support.open') if support_state.open else t('support.closed_now') }}</span> · {{ t('support.agents_online', n=support_state.agents_online|bn_digits) }} · {{ t('support.waiting_n', n=support_state.waiting|bn_digits) }}</p>
+  {% if presence is not none or current_user.can(P.SUPPORT_PRESENCE) %}
+  <form method="post" action="{{ url_for('workspace.support_presence') }}" class="cluster">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <span class="small muted">{{ t('support.your_presence') }}: <strong>{{ t('presence.' ~ (presence.status if presence else 'offline')) }}</strong></span>
+    <button class="btn btn-secondary btn-sm" name="status" value="available">{{ t('presence.set_available') }}</button>
+    <button class="btn btn-ghost btn-sm" name="status" value="offline">{{ t('presence.set_offline') }}</button>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('workspace.support_queue') }}">{{ t('support.open_queue') }}</a>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if pipeline %}
+<div class="card mt-4">
+  <h2>{{ t('ws.publications') }}</h2>
+  <div class="cluster">{% for stage_name, n in pipeline.items() %}<a class="chip" href="{{ url_for('workspace.publications', stage=stage_name) }}">{{ t('stage.' ~ stage_name) }} · {{ n|bn_digits }}</a>{% endfor %}</div>
+</div>
+{% endif %}
+
+{% if mod_open is not none or requests_open is not none %}
+<div class="cluster mt-4">
+  {% if mod_open is not none %}<a class="chip" href="{{ url_for('workspace.moderation') }}">{{ t('ws.moderation') }} · {{ mod_open|bn_digits }}</a>{% endif %}
+  {% if requests_open is not none %}<a class="chip" href="{{ url_for('workspace.requests_queue') }}">{{ t('ws.requests') }} · {{ requests_open|bn_digits }}</a>{% endif %}
+</div>
+{% endif %}
+
+<h2>{{ t('ws.recent_cases') }}</h2>
+{% if recent %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('case.reference') }}</th><th>{{ t('case.category') }}</th><th>{{ t('case.severity') }}</th><th>{{ t('case.status') }}</th><th>{{ t('case.received') }}</th></tr></thead>
+  <tbody>{% for c in recent %}<tr>
+    <td><a class="row-link mono" href="{{ url_for('workspace.case_detail', reference=c.reference) }}">{{ c.reference }}</a> {{ flag(c) }}</td>
+    <td>{{ t('category.' ~ c.category) }}</td><td>{{ level(c.severity_level) }}</td><td>{{ status(c.status) }}</td><td class="nowrap">{{ c.created_at|dt }}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{% else %}{{ empty('ws.no_cases_title', 'ws.no_cases_text') }}{% endif %}
+{% endblock %}

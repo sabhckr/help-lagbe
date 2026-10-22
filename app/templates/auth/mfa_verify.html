@@ -1,0 +1,18 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, submit %}
+{% block title %}{{ t('auth.mfa_verify_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ t('auth.mfa_verify_title') }}</h1>
+  <p class="lead">{{ t('auth.mfa_verify_lead') }}</p>
+  <div class="card">
+    <form method="post" novalidate data-once>
+      {{ form.hidden_tag() }}
+      {{ field(form.code, autocomplete='one-time-code', inputmode='numeric', placeholder='auth.mfa_placeholder') }}
+      <div class="form-actions">{{ submit('auth.mfa_verify_button') }}<a class="btn btn-ghost" href="{{ url_for('auth.logout') }}">{{ t('ui.cancel') }}</a></div>
+    </form>
+  </div>
+  <p class="muted small">{{ t('auth.mfa_lost') }}</p>
+</div>
+{% endblock %}

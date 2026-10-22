@@ -1,0 +1,13 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import status, empty %}
+{% block title %}{{ t('ws.retention') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.retention') }}</h1><p class="muted">{{ t('retention.help', days=days|bn_digits) }}</p></div></div>
+<h2>{{ t('retention.due') }}</h2>
+{% if due %}<div class="table-wrap"><table class="table"><thead><tr><th>{{ t('case.reference') }}</th><th>{{ t('case.status') }}</th><th>{{ t('retention.review_date') }}</th><th>{{ t('case.identity_on_file') }}</th><th>{{ t('ui.actions') }}</th></tr></thead><tbody>
+{% for c in due %}<tr><td class="mono">{{ c.reference }}</td><td>{{ status(c.status) }}</td><td>{{ c.retention_review_at|d }}</td><td>{% if c.has_identity and c.identity and not c.identity.purged_at %}{{ t('ui.yes') }}{% else %}{{ t('ui.no') }}{% endif %}</td>
+<td>{% if c.has_identity and c.identity and not c.identity.purged_at %}<form method="post" action="{{ url_for('workspace.admin_purge_identity', reference=c.reference) }}">{{ form.hidden_tag() }}<div class="field"><label for="pr-{{ c.id }}" class="small">{{ t('access.reason') }}</label><textarea name="reason" id="pr-{{ c.id }}" rows="2" required minlength="15"></textarea></div><button class="btn btn-danger btn-sm">{{ t('retention.purge_identity') }}</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}{{ empty('retention.none_due') }}{% endif %}
+<h2>{{ t('retention.upcoming') }}</h2>
+{% if upcoming %}<ul>{% for c in upcoming %}<li class="mono">{{ c.reference }} · {{ c.retention_review_at|d }}</li>{% endfor %}</ul>{% else %}<p class="muted">{{ t('retention.none_upcoming') }}</p>{% endif %}
+{% endblock %}

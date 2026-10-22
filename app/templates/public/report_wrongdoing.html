@@ -1,0 +1,10 @@
+{% extends "public/_page.html" %}
+{% set page_key = 'report_wrongdoing' %}{% set slug = 'report-wrongdoing' %}
+{% block before %}
+<div class="cluster no-print my-3-6">
+  <a class="btn btn-primary" href="{{ url_for('report.new') }}">{{ t('home.cta_report') }}</a>
+  <a class="btn btn-ghost" href="{{ url_for('public.page', slug='live-support') }}">{{ t('nav.live_support') }}</a>
+  <a class="btn btn-ghost" href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a>
+</div>
+{% include 'public/_contacts.html' %}
+{% endblock %}

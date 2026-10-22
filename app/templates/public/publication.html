@@ -1,0 +1,18 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import label_badge %}
+{% block title %}{{ pub.headline_bn if current_locale == 'bn' and pub.headline_bn else pub.headline }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<article class="prose">
+  <p class="eyebrow">{{ t('pub_kind.' ~ pub.kind) }} · {{ pub.published_at|d }}</p>
+  <h1>{{ pub.headline_bn if current_locale == 'bn' and pub.headline_bn else pub.headline }}</h1>
+  <p>{{ label_badge(pub.label) }}</p>
+  <div class="alert alert-info small"><strong>{{ t('pub_label.' ~ pub.label) }}:</strong> {{ t('pub_label_help.' ~ pub.label) }}</div>
+  <div class="narrative" lang="{{ 'bn' if current_locale == 'bn' and pub.body_redacted_bn else 'en' }}">{{ pub.body_redacted_bn if current_locale == 'bn' and pub.body_redacted_bn else pub.body_redacted }}</div>
+  {% set published_responses = pub.responses|selectattr('publish_response')|selectattr('response_text')|list %}
+  {% if published_responses %}<h2>{{ t('ror.public_title') }}</h2>{% for r in published_responses %}<blockquote class="panel"><p class="small muted">{{ r.party_description }}</p><p>{{ r.response_text }}</p></blockquote>{% endfor %}{% elif pub.right_of_response_offered %}<p class="small muted">{{ t('ror.offered_note') }}</p>{% endif %}
+  {% if pub.corrections %}<h2>{{ t('correction.title') }}</h2><ul class="timeline">{% for c in pub.corrections %}<li class="is-status"><time>{{ c.created_at|d }}</time><strong>{{ t('correction.' ~ c.kind) }}</strong><p>{{ c.text_bn if current_locale == 'bn' and c.text_bn else c.text }}</p></li>{% endfor %}</ul>{% endif %}
+  <hr>
+  <p class="small muted">{{ t('publication.public_footer') }}</p>
+  <div class="cluster"><a class="btn btn-ghost btn-sm" href="{{ url_for('public.new_request', type='correction', publication=pub.slug) }}">{{ t('request.request_correction') }}</a><a class="btn btn-ghost btn-sm" href="{{ url_for('public.new_request', type='right_of_reply', publication=pub.slug) }}">{{ t('request.request_reply') }}</a><a class="btn btn-ghost btn-sm" href="{{ url_for('public.new_request', type='removal', publication=pub.slug) }}">{{ t('request.request_removal') }}</a></div>
+</article>
+{% endblock %}

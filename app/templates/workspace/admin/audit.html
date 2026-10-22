@@ -1,0 +1,32 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import pagination as paginate, empty %}
+{% block title %}{{ t('ws.audit') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.audit') }}</h1><p class="muted">{{ t('audit.help') }}</p></div></div>
+<form method="get" class="toolbar" role="search">
+  <select name="event"><option value="">{{ t('audit.any_event') }}</option>{% for e in event_types %}<option value="{{ e }}" {% if request.args.get('event') == e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select>
+  <input type="text" name="case" placeholder="{{ t('case.reference') }}" value="{{ request.args.get('case','') }}" class="mono">
+  <input class="w-120" type="number" name="actor" placeholder="{{ t('audit.actor_id') }}" value="{{ request.args.get('actor','') }}">
+  <label class="check small"><input type="checkbox" name="sensitive" value="1" {% if request.args.get('sensitive') == '1' %}checked{% endif %}> {{ t('audit.sensitive_only') }}</label>
+  <button class="btn btn-ghost btn-sm">{{ t('ui.filter') }}</button>
+</form>
+{% if pagination.items %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>{{ t('audit.when') }}</th><th>{{ t('audit.actor') }}</th><th>{{ t('audit.event') }}</th><th>{{ t('audit.target') }}</th><th>{{ t('audit.reason') }}</th></tr></thead>
+  <tbody>{% for e in pagination.items %}<tr {% if e.is_sensitive %}class="is-sensitive"{% endif %}>
+    <td class="nowrap small">{{ e.created_at|dt }}</td>
+    <td class="small">{% if e.actor %}{{ e.actor.name }}<br><span class="muted">{{ t('role.' ~ e.actor_role) if e.actor_role else '' }} · #{{ e.actor_id }}</span>{% else %}<span class="muted">{{ t('audit.public') }}</span>{% endif %}</td>
+    <td><code>{{ e.event_type }}</code>{% if e.is_sensitive %} <span class="badge badge-danger">{{ t('audit.sensitive') }}</span>{% endif %}</td>
+    <td class="small">{{ e.target_type or '' }}{% if e.target_id %} #{{ e.target_id }}{% endif %}{% if e.case %}<br><a class="mono" href="{{ url_for('workspace.case_detail', reference=e.case.reference) }}">{{ e.case.reference }}</a>{% endif %}</td>
+    <td class="small">{{ e.reason or '' }}{% if e.details %}<br><code class="muted">{{ e.details }}</code>{% endif %}</td>
+  </tr>{% endfor %}</tbody>
+</table></div>
+{{ paginate(pagination, 'workspace.audit') }}
+{% else %}{{ empty('audit.none') }}{% endif %}
+{% if current_user.can(P.AUDIT_VIEW_ALL) %}
+<details class="panel-details mt-5"><summary>{{ t('audit.export_title') }}</summary><div class="panel-body">
+  <p class="small muted">{{ t('audit.export_help') }}</p>
+  <form method="post" action="{{ url_for('workspace.audit_export') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="field"><label for="exp-reason">{{ t('access.reason') }}</label><textarea name="reason" id="exp-reason" rows="2" required minlength="15"></textarea></div><button class="btn btn-ghost btn-sm">{{ t('audit.export_button') }}</button></form>
+</div></details>
+{% endif %}
+{% endblock %}

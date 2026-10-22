@@ -1,0 +1,70 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, checkbox, radios, file, submit %}
+{% block title %}{{ t('report.page_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <p class="eyebrow">{{ t('report.eyebrow') }}</p>
+  <h1>{{ t('report.page_title') }}</h1>
+  <p class="lead">{{ t('report.lead') }}</p>
+
+  <div class="alert alert-warn">
+    <h3>{{ t('report.danger_box_title') }}</h3>
+    <p>{{ t('report.danger_box_text') }}</p>
+    {% if contacts %}<ul class="cluster list-plain">{% for c in contacts %}<li><strong>{{ c.name_bn if current_locale == 'bn' and c.name_bn else c.name_en }}</strong>: <a href="tel:{{ c.number }}">{{ c.number|bn_digits }}</a></li>{% endfor %}</ul>{% else %}<p class="small muted">{{ t('report.no_verified_contacts') }}</p>{% endif %}
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate data-once class="card">
+    {{ form.hidden_tag() }}
+    <div class="hp" aria-hidden="true"><label>website<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+    <fieldset class="section">
+      <legend>{{ t('report.section_what') }}</legend>
+      {{ field(form.category, help='report.category_help') }}
+      {{ field(form.title, help='report.title_help', maxlength=200) }}
+      {{ field(form.narrative, help='report.narrative_help', rows=9, maxlength=20000) }}
+      {{ field(form.approximate_time, help='report.approximate_time_help', placeholder='report.approximate_time_placeholder') }}
+      {{ field(form.location_text, help='report.location_help') }}
+    </fieldset>
+
+    <fieldset class="section">
+      <legend>{{ t('report.section_safety') }}</legend>
+      {{ radios(form.immediate_danger, help='report.immediate_danger_help') }}
+      {{ checkbox(form.child_involved, help='report.child_involved_help') }}
+    </fieldset>
+
+    <fieldset class="section">
+      <legend>{{ t('report.section_identity') }}</legend>
+      {{ radios(form.submission_type, descriptions={'anonymous': 'report.type_anonymous_desc', 'confidential': 'report.type_confidential_desc'}) }}
+      <div id="identity-section" class="panel stack-sm">
+        <p class="small"><strong>{{ t('report.identity_notice_title') }}</strong> {{ t('report.identity_notice') }}</p>
+        {{ field(form.identity_name, autocomplete='off') }}
+        {{ field(form.identity_phone, autocomplete='off', inputmode='tel') }}
+        {{ field(form.identity_email, autocomplete='off', inputmode='email') }}
+        {{ field(form.contact_preference, help='report.contact_preference_help') }}
+        {{ field(form.safe_hours, help='report.safe_hours_help') }}
+        {{ field(form.do_not_contact, help='report.do_not_contact_help') }}
+        {{ field(form.safe_contact_notes, rows=3) }}
+        {{ checkbox(form.consent_contact, help='report.consent_contact_help') }}
+      </div>
+    </fieldset>
+
+    <fieldset class="section">
+      <legend>{{ t('report.section_evidence') }}</legend>
+      <p class="field-help">{{ t('report.evidence_help', max=config.EVIDENCE_MAX_FILES_PER_REPORT, mb=(config.MAX_CONTENT_LENGTH // 1048576)) }}</p>
+      <input type="file" name="evidence" id="evidence" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.mp3,.m4a,.mp4,.txt" data-max-bytes="{{ config.MAX_CONTENT_LENGTH }}" data-too-large="{{ t('upload.error_size') }}" aria-describedby="evidence-msg">
+      <p id="evidence-msg" class="small muted" aria-live="polite"></p>
+      {{ field(form.evidence_description, help='report.evidence_description_help') }}
+    </fieldset>
+
+    <fieldset class="section">
+      <legend>{{ t('report.section_consent') }}</legend>
+      {{ checkbox(form.consent_process, help='report.consent_process_help') }}
+      {{ checkbox(form.consent_publication, help='report.consent_publication_help') }}
+      <p class="small muted">{{ t('report.consent_footer') }} <a href="{{ url_for('public.page', slug='privacy') }}">{{ t('nav.privacy') }}</a> · <a href="{{ url_for('public.page', slug='safeguarding') }}">{{ t('nav.safeguarding') }}</a></p>
+    </fieldset>
+
+    <div class="form-actions">{{ submit('report.submit_button') }}<span class="small muted">{{ t('report.submit_note') }}</span></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
-  <h2 class="text-xl font-bold mb-2">Social Media Draft</h2>
-  <p class="text-sm text-slate-600 mb-4">Prepared for manual posting. Does not publish automatically. Review before use.</p>
-  <pre class="bg-slate-100 p-4 rounded text-sm whitespace-pre-wrap">{{ draft }}</pre>
-  <p class="mt-4 text-xs text-slate-500">Case: {{ complaint.title }} ({{ complaint.public_id }})</p>
-</div>
-{% endblock %}

@@ -1,0 +1,66 @@
+{% macro errors(f) %}
+  {% if f.errors %}<ul class="field-errors" id="{{ f.id }}-error">{% for e in f.errors %}<li>{{ t(e) }}</li>{% endfor %}</ul>{% endif %}
+{% endmacro %}
+
+{% macro field(f, help=None, placeholder=None, rows=None, autocomplete=None, required=None, inputmode=None, maxlength=None, class='') %}
+{% set attrs = {} %}
+{% set describedby = ((f.id ~ '-help') if help else '') ~ ((' ' ~ f.id ~ '-error') if f.errors else '') %}
+{% if describedby.strip() %}{% set _ = attrs.update({'aria-describedby': describedby.strip()}) %}{% endif %}
+{% if f.errors %}{% set _ = attrs.update({'aria-invalid': 'true'}) %}{% endif %}
+{% if placeholder %}{% set _ = attrs.update({'placeholder': t(placeholder)}) %}{% endif %}
+{% if autocomplete %}{% set _ = attrs.update({'autocomplete': autocomplete}) %}{% endif %}
+{% if inputmode %}{% set _ = attrs.update({'inputmode': inputmode}) %}{% endif %}
+{% if maxlength %}{% set _ = attrs.update({'maxlength': maxlength}) %}{% endif %}
+<div class="field {{ class }} {% if f.errors %}field--invalid{% endif %}">
+  <label for="{{ f.id }}">{{ t(f.label.text) }}{% if f.flags.required or required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+  {% if help %}<p class="field-help" id="{{ f.id }}-help">{{ t(help) }}</p>{% endif %}
+  {% if f.type in ('TextAreaField',) %}
+    {{ f(rows=rows or 5, **attrs) }}
+  {% elif f.type in ('SelectField',) %}
+    <select name="{{ f.name }}" id="{{ f.id }}" {% if attrs.get('aria-describedby') %}aria-describedby="{{ attrs['aria-describedby'] }}"{% endif %}>
+      {% for value, label in f.choices %}<option value="{{ value }}" {% if f.data is not none and f.data|string == value|string %}selected{% endif %}>{{ t(label) }}</option>{% endfor %}
+    </select>
+  {% else %}
+    {{ f(**attrs) }}
+  {% endif %}
+  {{ errors(f) }}
+</div>
+{% endmacro %}
+
+{% macro checkbox(f, help=None) %}
+<div class="field field--check {% if f.errors %}field--invalid{% endif %}">
+  <label class="check">
+    {% if help %}{{ f(**{'aria-describedby': f.id ~ '-help'}) }}{% else %}{{ f() }}{% endif %}
+    <span>{{ t(f.label.text) }}</span>
+  </label>
+  {% if help %}<p class="field-help" id="{{ f.id }}-help">{{ t(help) }}</p>{% endif %}
+  {{ errors(f) }}
+</div>
+{% endmacro %}
+
+{% macro radios(f, help=None, descriptions=None) %}
+<fieldset class="field field--radios {% if f.errors %}field--invalid{% endif %}">
+  <legend>{{ t(f.label.text) }}</legend>
+  {% if help %}<p class="field-help">{{ t(help) }}</p>{% endif %}
+  {% for sub in f %}
+    <label class="radio">
+      {{ sub }}
+      <span><strong>{{ t(sub.label.text) }}</strong>{% if descriptions and descriptions.get(sub.data) %}<br><span class="muted small">{{ t(descriptions[sub.data]) }}</span>{% endif %}</span>
+    </label>
+  {% endfor %}
+  {{ errors(f) }}
+</fieldset>
+{% endmacro %}
+
+{% macro file(f, help=None, multiple=False, accept=None) %}
+<div class="field {% if f.errors %}field--invalid{% endif %}">
+  <label for="{{ f.id }}">{{ t(f.label.text) }}</label>
+  {% if help %}<p class="field-help" id="{{ f.id }}-help">{{ t(help) }}</p>{% endif %}
+  <input type="file" name="{{ f.name }}" id="{{ f.id }}" {% if multiple %}multiple{% endif %} {% if accept %}accept="{{ accept }}"{% endif %} {% if help %}aria-describedby="{{ f.id }}-help"{% endif %}>
+  {{ errors(f) }}
+</div>
+{% endmacro %}
+
+{% macro submit(label, class='btn btn-primary', name=None, value=None) %}
+<button type="submit" class="{{ class }}" {% if name %}name="{{ name }}" value="{{ value }}"{% endif %}>{{ t(label) }}</button>
+{% endmacro %}

@@ -1,0 +1,14 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field, submit %}
+{% block title %}{{ item.reference }} · {{ t('ws.requests') }}{% endblock %}
+{% block workspace %}
+<p class="eyebrow">{{ t('request_type.' ~ item.request_type) }} · <span class="badge badge-muted">{{ t('request_status.' ~ item.status) }}</span></p>
+<h1 class="mono">{{ item.reference }}</h1>
+<p class="small muted">{{ item.created_at|dt }}{% if item.publication %} · <a href="{{ url_for('workspace.publication_detail', pub_id=item.publication.id) }}">{{ item.publication.headline }}</a>{% endif %}{% if item.case_reference %} · {{ item.case_reference }}{% endif %}</p>
+<div class="narrative">{{ item.message }}</div>
+<p class="small mt-2">{{ t('request.contact') }}: {% if contact %}<span class="mono">{{ contact }}</span> <span class="muted">({{ t('request.contact_logged') }})</span>{% elif item.contact_enc %}<a href="{{ url_for('workspace.request_detail', request_id=item.id, reveal=1) }}">{{ t('request.reveal_contact') }}</a> <span class="muted">({{ t('request.reveal_logged') }})</span>{% else %}{{ t('request.no_contact') }}{% endif %}</p>
+{% if item.resolution %}<div class="card card--flat"><strong>{{ t('request.resolution') }}</strong><p>{{ item.resolution }}</p><span class="small muted">{{ item.handled_by.name if item.handled_by else '' }}</span></div>{% endif %}
+{% if item.status in ('open','in_review') %}
+<form method="post" class="card" novalidate data-once>{{ form.hidden_tag() }}{{ field(form.status) }}{{ field(form.resolution, rows=4, help='request.resolution_help') }}<div class="form-actions">{{ submit('ui.save') }}</div></form>
+{% endif %}
+{% endblock %}

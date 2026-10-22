@@ -1,0 +1,32 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import empty %}
+{% block title %}{{ t('ws.support') }} · {{ t('site.name') }}{% endblock %}
+{% block body_class %}workspace{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.support') }}</h1><p class="muted">{{ t('support.queue_help') }}</p></div></div>
+<div class="card">
+  <div class="cluster"><span class="availability {{ 'is-open' if state.open else 'is-closed' }}">{{ t('support.open') if state.open else t('support.closed_now') }}</span><span class="small">{{ t('support.agents_online', n=state.agents_online|bn_digits) }} · {{ t('support.waiting_n', n=state.waiting|bn_digits) }}</span>{% if not state.service_enabled %}<span class="badge badge-warn">{{ t('support.service_disabled') }}</span>{% endif %}</div>
+  {% if current_user.can(P.SUPPORT_PRESENCE) %}
+  <form method="post" action="{{ url_for('workspace.support_presence') }}" class="cluster mt-2">{{ empty_form.hidden_tag() }}
+    <span class="small muted">{{ t('support.your_presence') }}: <strong>{{ t('presence.' ~ (presence.status if presence else 'offline')) }}</strong></span>
+    <button class="btn btn-secondary btn-sm" name="status" value="available">{{ t('presence.set_available') }}</button>
+    <button class="btn btn-ghost btn-sm" name="status" value="busy">{{ t('presence.set_busy') }}</button>
+    <button class="btn btn-ghost btn-sm" name="status" value="offline">{{ t('presence.set_offline') }}</button>
+  </form>
+  <p class="small muted mt-1">{{ t('support.presence_help') }}</p>
+  {% endif %}
+</div>
+<h2>{{ t('support.queue') }}</h2>
+{% for c in queue %}
+<div class="card {% if c.safety_flag %}card--danger{% endif %}">
+  <div class="cluster"><strong class="mono">{{ c.reference }}</strong><span class="badge badge-muted">{{ t('conv_status.' ~ c.status) }}</span>{% if c.safety_flag %}<span class="badge badge-danger">{{ t('support.safety_flag') }}</span>{% endif %}{% if c.escalated_at %}<span class="badge badge-warn">{{ t('support.escalated_badge') }}</span>{% endif %}<span class="small muted">{{ t('support_topic.' ~ (c.topic or 'other')) }} · {{ LANGUAGE_NAMES.get(c.language, c.language) }} · {{ c.started_at|dt }}</span>{% if c.agent %}<span class="small muted">{{ t('support.agent') }}: {{ c.agent.name }}</span>{% endif %}</div>
+  <div class="cluster mt-1">
+    {% if c.status == 'waiting' and current_user.can(P.SUPPORT_CHAT) %}<form method="post" action="{{ url_for('workspace.support_accept', reference=c.reference) }}">{{ empty_form.hidden_tag() }}<button class="btn btn-primary btn-sm">{{ t('support.accept') }}</button></form>{% endif %}
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('workspace.support_conversation', reference=c.reference) }}">{{ t('support.open_conversation') }}</a>
+  </div>
+</div>
+{% else %}{{ empty('support.queue_empty') }}{% endfor %}
+{% if follow_ups %}<h2>{{ t('support.follow_ups') }}</h2><ul>{% for c in follow_ups %}<li><a class="mono" href="{{ url_for('workspace.support_conversation', reference=c.reference) }}">{{ c.reference }}</a> — {{ c.follow_up_note or '' }}</li>{% endfor %}</ul>{% endif %}
+{% if recent_closed %}<h2>{{ t('support.recent_closed') }}</h2><ul class="small">{% for c in recent_closed %}<li><a class="mono" href="{{ url_for('workspace.support_conversation', reference=c.reference) }}">{{ c.reference }}</a> · {{ c.closed_at|dt }} · {{ c.closed_by }}</li>{% endfor %}</ul>{% endif %}
+{% endblock %}
+{% block scripts %}<script>document.body.dataset.heartbeat = "{{ url_for('workspace.support_heartbeat') }}";</script>{% endblock %}

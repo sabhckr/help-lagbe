@@ -1,0 +1,12 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('page.' ~ page_key ~ '.title') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<article class="prose">
+  <p class="eyebrow">{{ t('page.' ~ page_key ~ '.eyebrow') }}</p>
+  <h1>{{ t('page.' ~ page_key ~ '.title') }}</h1>
+  {% block intro %}{% endblock %}
+  {% block before %}{% endblock %}
+  {% include 'public/content/' ~ slug ~ '.' ~ current_locale ~ '.html' ignore missing %}
+  {% block after %}{% endblock %}
+</article>
+{% endblock %}

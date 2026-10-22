@@ -1,0 +1,15 @@
+<h2>What this page shows</h2>
+<p>Below is the public list of corrections made to pieces we have published. Each entry names the piece, says what was wrong, what it was changed to, and when. The correction also appears on the piece itself. We keep this list so that readers can see our mistakes and how we handled them, not only the finished text.</p>
+
+<h2>What counts as a correction</h2>
+<p>A factual error, a statement attributed to the wrong person, a label that overstated what the evidence supported, or a missing response from someone we should have asked. Minor changes to spelling or layout are not listed. If a piece is withdrawn entirely, the withdrawal is recorded here as well.</p>
+
+<h2>How to request a change</h2>
+<p>Anyone can ask. Use the request form and choose the kind of request that fits:</p>
+<ul>
+  <li><a href="{{ url_for('public.new_request', type='correction') }}">Correction</a>: something published is inaccurate.</li>
+  <li><a href="{{ url_for('public.new_request', type='right_of_reply') }}">Reply</a>: you are named or identifiable and want your response added.</li>
+  <li><a href="{{ url_for('public.new_request', type='appeal') }}">Appeal</a>: you disagree with an editorial or case decision.</li>
+  <li><a href="{{ url_for('public.new_request', type='removal') }}">Removal</a>: you want a piece or some information taken down.</li>
+</ul>
+<p>Say which piece you mean and what you believe is wrong. You can leave a contact if you want a reply; it is stored encrypted and used only for your request. Requests are reviewed by a person who was not the author of the piece. We do not promise a fixed response time, and we do not remove a piece simply because someone objects to it; we weigh accuracy, safety and public interest, and we record the decision.</p>

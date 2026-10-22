@@ -1,0 +1,23 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, submit %}
+{% block title %}{{ t('auth.mfa_setup_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ t('auth.mfa_setup_title') }}</h1>
+  <p class="lead">{{ t('auth.mfa_setup_lead') }}</p>
+  <div class="card">
+    <ol class="steps">
+      <li>{{ t('auth.mfa_step1') }}</li>
+      <li>{{ t('auth.mfa_step2') }}<div class="stack-sm mt-2"><img src="{{ qr }}" alt="{{ t('auth.mfa_qr_alt') }}" width="200" height="200"><p class="small muted">{{ t('auth.mfa_manual') }} <code class="mono" id="mfa-secret">{{ secret }}</code> <button type="button" class="btn btn-ghost btn-sm" data-copy="mfa-secret">{{ t('ui.copy') }}</button></p><p class="small muted">{{ t('auth.mfa_account') }}: {{ email }}</p></div></li>
+      <li>{{ t('auth.mfa_step3') }}
+        <form class="mt-2" method="post" novalidate data-once>
+          {{ form.hidden_tag() }}
+          {{ field(form.code, autocomplete='one-time-code', inputmode='numeric', placeholder='auth.mfa_placeholder') }}
+          <div class="form-actions">{{ submit('auth.mfa_enable') }}</div>
+        </form>
+      </li>
+    </ol>
+  </div>
+</div>
+{% endblock %}

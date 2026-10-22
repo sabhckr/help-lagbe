@@ -1,21 +1,22 @@
-{% extends "base.html" %}
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% block title %}{{ t('auth.register_title') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow">
-  <h2 class="text-2xl font-bold mb-6">Register</h2>
-  <form method="POST">
-    <div class="mb-4">
-      <label class="block text-sm font-medium mb-1">Name</label>
-      <input type="text" name="name" required class="w-full border rounded px-3 py-2">
-    </div>
-    <div class="mb-4">
-      <label class="block text-sm font-medium mb-1">Email</label>
-      <input type="email" name="email" required class="w-full border rounded px-3 py-2">
-    </div>
-    <div class="mb-6">
-      <label class="block text-sm font-medium mb-1">Password</label>
-      <input type="password" name="password" required class="w-full border rounded px-3 py-2">
-    </div>
-    <button type="submit" class="w-full bg-primary text-white py-2 rounded font-medium">Create Account</button>
-  </form>
+<div class="narrow">
+  <h1>{{ t('auth.register_title') }}</h1>
+  <p class="lead">{{ t('auth.register_lead') }}</p>
+  <div class="alert alert-info">{{ t('auth.register_notice') }}</div>
+  <div class="card">
+    <form method="post" novalidate data-once>
+      {{ form.hidden_tag() }}
+      {{ field(form.name, autocomplete='name', help='auth.name_help') }}
+      {{ field(form.email, autocomplete='email', inputmode='email') }}
+      {{ field(form.password, autocomplete='new-password', help='auth.password_help') }}
+      {{ field(form.password2, autocomplete='new-password') }}
+      {{ checkbox(form.accept) }}
+      <div class="form-actions">{{ submit('auth.register_button') }}<a class="btn btn-ghost" href="{{ url_for('auth.login') }}">{{ t('auth.have_account') }}</a></div>
+    </form>
+  </div>
 </div>
 {% endblock %}
