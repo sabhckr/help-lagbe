@@ -8,23 +8,23 @@
 |---|---|
 | Production `DATABASE_URL` starts with `postgresql`. | Confirmed by the owner from the Vercel dashboard, 23 October. |
 | Production's database is Neon project "Help Lagbe", branch `production`, database `neondb`. It was at revision `38dfa181b5f7` with every table empty, and was migrated to `c3cee4c88fb2` on 23 October. | Queries in the Neon SQL editor, 23 October, on the branch the owner named. A snapshot was taken first. |
-| The live site runs commit `9322729`. | Its `app.css` and `app.js` are byte-identical to that commit. |
+| The live site runs commit `35a07e6`. Every push to `main` deploys. | Vercel's GitHub commit statuses: "Deployment has completed" for `35a07e6` (22 October, 14:00 UTC) and for each push before it, except `b299e3c`, which failed. `9322729` has no Vercel status. Its static files are identical to `35a07e6`, which misled an earlier check. |
 | The live site is served by Vercel and runs the app's production profile. | `server: Vercel`, `x-vercel-id`, and the production-only HSTS header. |
 | The live database holds no development seed data. | The live home page shows nothing published. |
-| The repository has no `vercel.json` or `.vercel/` link. | File listing. Vercel finds the Flask `app` in `wsgi.py` ([Vercel Flask docs](https://vercel.com/docs/frameworks/backend/flask)). |
+| Vercel builds from `api/index.py` (the entry point), `vercel.json` (functions pinned to region `sin1`, next to the Neon database in Singapore), `.python-version` (3.12) and the `[project]` dependency list in `pyproject.toml`. That list must match `requirements.txt`, and a test checks this. | Commits `b299e3c`–`35a07e6`. |
+| Templates live in `app/templates/site`, not `public`. | Vercel leaves directories named `public` out of the function bundle (commit `35a07e6`). A test keeps any `app/**/public` directory from coming back. |
 | Vercel Functions accept at most 4.5 MB per request and per response. | [Vercel Functions limits](https://vercel.com/docs/functions/limitations). |
 | Production never migrates by itself. | `create_app` migrates only in development, and only against a local database. |
 | All four migrations upgrade, downgrade and re-upgrade, and match the models. | Run on SQLite and on local PostgreSQL 17, including with `postgres://` and `postgresql://` URLs. |
 | The full test suite passes on SQLite and PostgreSQL. | 139 tests. |
 
-An earlier version of this document inferred that production used SQLite, because commit `9322729` installs no PostgreSQL driver. That inference was wrong. The live build must get a PostgreSQL driver some other way, for example a custom Install Command in Vercel; this is not verified. The new code does not depend on it: it installs `psycopg` 3 and rewrites any `postgres://`, `postgresql://` or `postgresql+psycopg2://` URL to use that driver.
+An earlier version of this document inferred that production used SQLite, because commit `9322729` installs no PostgreSQL driver. That inference was wrong: commit `b299e3c` added `psycopg` 3 for the live build. The code rewrites any `postgres://`, `postgresql://` or `postgresql+psycopg2://` URL to use that driver.
 
 ## 2. Still unverified
 
 1. **That the Neon branch above is what Vercel's `DATABASE_URL` points to.** It is the project's only branch, which makes this likely.
-2. **`RATELIMIT_STORAGE_URI`.** Whatever works today keeps working, because the new requirements include everything `9322729` had, plus `redis`.
-3. **How deploys are triggered.** The live site changed after the push to `main`. That fits Vercel's Git integration but was not confirmed. Treat a push to `main` as a deploy.
-4. **The client address the app sees on Vercel.** If rate limits group everyone under one proxy address, set `TRUSTED_PROXY_COUNT=1`.
+2. **How rate limits are stored.** Production starts only if `RATELIMIT_STORAGE_URI` points at a shared store or `ALLOW_MEMORY_RATELIMIT=true` is set. The live build has the same rule, so whichever one production uses today keeps working. With memory storage, each function instance counts on its own, so limits are looser than configured.
+3. **The client address the app sees on Vercel.** If rate limits group everyone under one proxy address, set `TRUSTED_PROXY_COUNT=1`.
 
 ## 3. Procedure
 
@@ -63,7 +63,7 @@ Expected verdict: "already at the latest revision" (`c3cee4c88fb2`).
 
 Required in production: `APP_ENV=production`, `SECRET_KEY`, `IDENTITY_ENCRYPTION_KEY`, `DATABASE_URL`, `RATELIMIT_STORAGE_URI`, `SESSION_COOKIE_SECURE=true`.
 
-Optional: `MAX_UPLOAD_MB` (defaults to 4 on Vercel and 25 elsewhere), `TRUSTED_PROXY_COUNT`, `CLAMD_SOCKET`, `DATA_RETENTION_DAYS_CLOSED_CASES`. `EVIDENCE_DIR` is only read for files uploaded before database storage.
+Optional: `ALLOW_MEMORY_RATELIMIT` (lets production start without a shared rate-limit store), `INSTANCE_PATH` (defaults to `/tmp/help_lagbe_instance` on Vercel), `MAX_UPLOAD_MB` (defaults to 4 on Vercel and 25 elsewhere), `TRUSTED_PROXY_COUNT`, `CLAMD_SOCKET`, `DATA_RETENTION_DAYS_CLOSED_CASES`. `EVIDENCE_DIR` is only read for files uploaded before database storage.
 
 ## 5. Behaviour on Vercel
 

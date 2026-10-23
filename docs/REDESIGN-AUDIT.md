@@ -4,6 +4,8 @@ Scope: the live site at https://help-lagbe-eight.vercel.app/ (read-only checks),
 
 ## 1. Deployment finding (read first)
 
+> **Correction, 23 October 2026.** The live site was not running `9322729`. Five later commits on `origin/main` (`b299e3c`–`35a07e6`) set the app up for Vercel, and `35a07e6` is the live build. It serves the same static files, which is why the asset comparison below pointed at the wrong commit. [DEPLOYMENT.md](DEPLOYMENT.md) has the corrected facts.
+
 Pushing `main` (commit `9322729`) also deployed it to the live Vercel site. The live site now serves this build. Read-only checks show:
 
 - Production configuration is active (HSTS header present, no debugger output on errors).

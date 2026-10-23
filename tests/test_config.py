@@ -71,6 +71,19 @@ def test_migrate_profile_creates_nothing_on_start(monkeypatch, tmp_path):
     assert not target.exists() or inspect(create_engine(f"sqlite:///{target}")).get_table_names() == []
 
 
+def test_vercel_build_installs_the_same_pins_as_requirements():
+    import tomllib
+
+    declared = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["dependencies"]
+    pinned = [line.strip() for line in (ROOT / "requirements.txt").read_text().splitlines() if line.strip() and not line.startswith("#")]
+    assert sorted(declared) == sorted(pinned)
+
+
+def test_no_app_directory_is_named_public():
+    # Vercel leaves directories named "public" out of the function bundle, so anything in one would vanish.
+    assert [p for p in (ROOT / "app").rglob("public") if p.is_dir()] == []
+
+
 def test_status_script_needs_a_url_and_never_echoes_it():
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts/db_status.py")], capture_output=True, text=True, env={"PATH": "/usr/bin:/bin"}, cwd=ROOT

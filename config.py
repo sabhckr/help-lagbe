@@ -66,6 +66,9 @@ def is_local_database(url: str) -> bool:
     return host in ("", "localhost", "127.0.0.1", "::1")
 
 
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
+
 class BaseConfig:
     ENV_NAME = "base"
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
@@ -94,9 +97,9 @@ class BaseConfig:
     WTF_CSRF_SSL_STRICT = False  # Referer checks break behind some proxies; origin is enforced by SameSite + token.
 
     # Uploads (evidence). Stored outside the static folder, never served directly.
-    EVIDENCE_DIR = os.environ.get("EVIDENCE_DIR", str(INSTANCE_DIR / "evidence"))
+    EVIDENCE_DIR = os.environ.get("EVIDENCE_DIR", "/tmp/help_lagbe_evidence" if ON_VERCEL else str(INSTANCE_DIR / "evidence"))  # noqa: S108  # nosec B108
     # Vercel Functions accept at most 4.5 MB per request body, so the default there is 4 MB.
-    MAX_CONTENT_LENGTH = _env_int("MAX_UPLOAD_MB", 4 if os.environ.get("VERCEL") else 25) * 1024 * 1024
+    MAX_CONTENT_LENGTH = _env_int("MAX_UPLOAD_MB", 4 if ON_VERCEL else 25) * 1024 * 1024
     EVIDENCE_MAX_FILES_PER_REPORT = 5
     EVIDENCE_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "pdf", "mp3", "m4a", "mp4", "txt"}
     CLAMD_SOCKET = os.environ.get("CLAMD_SOCKET", "")  # e.g. /var/run/clamav/clamd.ctl ; empty = scanner unavailable
@@ -189,7 +192,7 @@ class ProductionConfig(BaseConfig):
             problems.append("IDENTITY_ENCRYPTION_KEY must be set (Fernet key).")
         if cls.SQLALCHEMY_DATABASE_URI.startswith("sqlite://") and "DATABASE_URL" not in os.environ:
             problems.append("DATABASE_URL must be set explicitly in production.")
-        if cls.RATELIMIT_STORAGE_URI == "memory://":
+        if cls.RATELIMIT_STORAGE_URI == "memory://" and not _env_bool("ALLOW_MEMORY_RATELIMIT", False):
             problems.append("RATELIMIT_STORAGE_URI should point at a shared store (e.g. redis://) in production.")
         if problems:
             raise RuntimeError("Refusing to start in production:\n - " + "\n - ".join(problems))

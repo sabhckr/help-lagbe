@@ -15,7 +15,7 @@ This runbook upgrades the production database in the Neon console. The database 
 | 5. Verify | Matched the **After** row exactly. |
 
 - **How the SQL was entered.** Each query was typed into the editor as a single line: the SQL file with its comment lines removed and its whitespace collapsed. That one-line form was rehearsed locally first, with the same results as the file. Before each run, the editor's text was checked against the rehearsed text by SHA-256.
-- **Live site afterwards.** The site still running `9322729` kept working against the upgraded schema: `/healthz` returned `{"status":"ok"}`, and `/` and `/report/new` returned 200.
+- **Live site afterwards.** The site still running `35a07e6` kept working against the upgraded schema: `/healthz` returned `{"status":"ok"}`, and `/` and `/report/new` returned 200.
 - **Neon history.** The SQL editor's History list keeps the queries, under titles Neon generated.
 
 ## Where production stood before
@@ -63,7 +63,7 @@ Open the Neon console → project "Help Lagbe" → branch `production` → **SQL
 
 - **Step 4 shows an error.** Nothing changed: the block undoes itself, and so do the checks. Fix the cause and run it again. A second run after a success stops at the first check ("expected revision 38dfa181b5f7, found c3cee4c88fb2") and changes nothing.
 - **To return to the state before the upgrade:** go to **Backup & Restore** → the step 2 snapshot → **Restore** → **One-step restore**. Production keeps its name and connection string, and the state it had before the restore is kept as a branch named "production (old)". The branch ID changes. The database is empty, so nothing is lost.
-- **Between the upgrade and the deploy,** the live site (`9322729`) keeps working, because it ignores the new tables and columns. It still writes the old category keys. If a report arrives in that window, rerun the 14 category `UPDATE`s from the SQL file after deploying. `SELECT category, count(*) FROM cases GROUP BY category;` shows whether any old keys remain.
+- **Between the upgrade and the deploy,** the live site (`35a07e6`) keeps working, because it ignores the new tables and columns. It still writes the old category keys. If a report arrives in that window, rerun the 14 category `UPDATE`s from the SQL file after deploying. `SELECT category, count(*) FROM cases GROUP BY category;` shows whether any old keys remain.
 
 ## What was verified, and what was not
 

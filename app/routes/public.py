@@ -55,7 +55,7 @@ def _published():
 def home():
     latest = _published().limit(3).all()
     return render_template(
-        "public/home.html",
+        "site/home.html",
         latest=latest,
         availability=availability(),
         announcement=_setting("announcement_" + (request.cookies.get(COOKIE_NAME) or current_app.config["DEFAULT_LANGUAGE"])),
@@ -69,7 +69,7 @@ def help_page():
 
     state = availability()
     return render_template(
-        "public/help.html",
+        "site/help.html",
         availability=state,
         contacts=_verified_contacts(),
         departments=departments,
@@ -87,7 +87,7 @@ def stories():
         .limit(30)
         .all()
     )
-    return render_template("public/stories.html", items=items, corrections=corrections)
+    return render_template("site/stories.html", items=items, corrections=corrections)
 
 
 @public_bp.route("/stories/<slug>")
@@ -95,27 +95,27 @@ def story(slug: str):
     pub = Publication.query.filter_by(slug=slug).first_or_404()
     if not pub.is_public:
         abort(404)
-    return render_template("public/story.html", pub=pub)
+    return render_template("site/story.html", pub=pub)
 
 
 @public_bp.route("/about")
 def about():
-    return render_template("public/about.html")
+    return render_template("site/about.html")
 
 
 @public_bp.route("/safety")
 def safety():
-    return render_template("public/safety.html")
+    return render_template("site/safety.html")
 
 
 @public_bp.route("/privacy")
 def privacy():
-    return render_template("public/privacy.html")
+    return render_template("site/privacy.html")
 
 
 @public_bp.route("/contact")
 def contact():
-    return render_template("public/contact.html")
+    return render_template("site/contact.html")
 
 
 @public_bp.route("/requests/new", methods=["GET", "POST"])
@@ -139,8 +139,8 @@ def new_request():
         db.session.flush()
         audit.record("request.created", target_type="public_request", target_id=req.id, details={"type": req.request_type})
         db.session.commit()
-        return render_template("public/request_submitted.html", reference=req.reference)
-    return render_template("public/request_new.html", form=form)
+        return render_template("site/request_submitted.html", reference=req.reference)
+    return render_template("site/request_new.html", form=form)
 
 
 @public_bp.route("/my-reports")
@@ -149,7 +149,7 @@ def my_reports():
     if current_user.is_staff:
         return redirect(url_for("workspace.home"))
     cases = Case.query.filter_by(reporter_user_id=current_user.id).order_by(Case.created_at.desc()).all()
-    return render_template("public/my_reports.html", cases=cases)
+    return render_template("site/my_reports.html", cases=cases)
 
 
 @public_bp.route("/lang/<code>")
@@ -176,7 +176,7 @@ def set_language(code: str):
 
 @public_bp.route("/offline")
 def offline():
-    return render_template("public/offline.html")
+    return render_template("site/offline.html")
 
 
 @public_bp.route("/sw.js")

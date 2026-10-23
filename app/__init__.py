@@ -23,7 +23,8 @@ __all__ = ["create_app", "db", "bcrypt", "login_manager"]
 
 def create_app(config_name: str | None = None, overrides: dict | None = None) -> Flask:
     load_dotenv()
-    app = Flask(__name__, instance_relative_config=True, static_url_path="/static")
+    instance_path = os.environ.get("INSTANCE_PATH") or ("/tmp/help_lagbe_instance" if os.environ.get("VERCEL") else None)  # noqa: S108  # nosec B108
+    app = Flask(__name__, instance_relative_config=True, static_url_path="/static", instance_path=instance_path)
     cfg = get_config(config_name)
     app.config.from_object(cfg)
     if overrides:
