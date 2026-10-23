@@ -1,12 +1,13 @@
 # Deploying Help Lagbe? (checked 23 October 2026)
 
-**Status: ready to deploy once the production database has been checked and migrated, in that order.** Pushing `main` first would break the report form, because the new tables would be missing.
+**Status: the production database was migrated to `c3cee4c88fb2` on 23 October ([PRODUCTION-MIGRATION.md](PRODUCTION-MIGRATION.md)). Deploying `main` is the next step.** Pushing `main` first would break the report form, because the new tables would be missing.
 
 ## 1. Facts
 
 | Fact | Source |
 |---|---|
 | Production `DATABASE_URL` starts with `postgresql`. | Confirmed by the owner from the Vercel dashboard, 23 October. |
+| Production's database is Neon project "Help Lagbe", branch `production`, database `neondb`. It was at revision `38dfa181b5f7` with every table empty, and was migrated to `c3cee4c88fb2` on 23 October. | Queries in the Neon SQL editor, 23 October, on the branch the owner named. A snapshot was taken first. |
 | The live site runs commit `9322729`. | Its `app.css` and `app.js` are byte-identical to that commit. |
 | The live site is served by Vercel and runs the app's production profile. | `server: Vercel`, `x-vercel-id`, and the production-only HSTS header. |
 | The live database holds no development seed data. | The live home page shows nothing published. |
@@ -20,12 +21,14 @@ An earlier version of this document inferred that production used SQLite, becaus
 
 ## 2. Still unverified
 
-1. **The schema revision of the production database.** Step 1 below checks it without changing anything.
+1. **That the Neon branch above is what Vercel's `DATABASE_URL` points to.** It is the project's only branch, which makes this likely.
 2. **`RATELIMIT_STORAGE_URI`.** Whatever works today keeps working, because the new requirements include everything `9322729` had, plus `redis`.
 3. **How deploys are triggered.** The live site changed after the push to `main`. That fits Vercel's Git integration but was not confirmed. Treat a push to `main` as a deploy.
 4. **The client address the app sees on Vercel.** If rate limits group everyone under one proxy address, set `TRUSTED_PROXY_COUNT=1`.
 
 ## 3. Procedure
+
+Steps 1–3 for the upgrade from `38dfa181b5f7` to `c3cee4c88fb2` were done on 23 October in the Neon SQL editor ([PRODUCTION-MIGRATION.md](PRODUCTION-MIGRATION.md)). The terminal route below is for future migrations.
 
 Run these from a clone of this repository with its virtualenv active. The production URL is typed into a hidden prompt, so it never appears on screen or in shell history.
 
