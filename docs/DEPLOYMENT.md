@@ -59,6 +59,18 @@ Expected verdict: "already at the latest revision" (`c3cee4c88fb2`).
 
 **Rollback:** redeploy the previous build; the schema can stay. Do not downgrade below `c3cee4c88fb2` once evidence is stored. That downgrade refuses to run while encrypted files exist, and the category mapping in `f8e40f3bb73c` is one-way, so restore from the step 2 backup if the data must go back.
 
+**Staff accounts on production:** create the first admin, or reset a forgotten staff password, from this repository. Each command asks for the database URL and the password without showing them:
+
+```bash
+read -rs "DATABASE_URL?Paste DATABASE_URL: " && echo && DATABASE_URL="$DATABASE_URL" APP_ENV=migrate .venv/bin/flask --app wsgi.py create-staff --email you@example.org --name "Your Name" --role admin; unset DATABASE_URL
+```
+
+```bash
+read -rs "DATABASE_URL?Paste DATABASE_URL: " && echo && DATABASE_URL="$DATABASE_URL" APP_ENV=migrate .venv/bin/flask --app wsgi.py reset-password --email you@example.org --reason "Forgot the password"; unset DATABASE_URL
+```
+
+A reset keeps two-step verification and clears any login lockout. It is recorded in the audit trail with the reason, and marked as sensitive. Add `--require-change` when resetting someone else's password, so that they choose their own at next sign-in. A reset does not sign out sessions that are already open.
+
 ## 4. Environment variables (names only)
 
 Required in production: `APP_ENV=production`, `SECRET_KEY`, `IDENTITY_ENCRYPTION_KEY`, `DATABASE_URL`, `RATELIMIT_STORAGE_URI`, `SESSION_COOKIE_SECURE=true`.

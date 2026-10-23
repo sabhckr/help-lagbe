@@ -272,6 +272,39 @@ def _register_cli(app: Flask) -> None:
         db.session.commit()
         click.echo(f"Created {role} account {user.id}")
 
+    @app.cli.command("reset-password")
+    @click.option("--email", required=True)
+    @click.option("--reason", required=True, help="Why the password is being reset. Kept in the audit trail.")
+    @click.option("--require-change", is_flag=True, help="Make the person choose their own password at next sign-in.")
+    @click.password_option()
+    def reset_password(email, reason, require_change, password):
+        """Set a new password for a staff account. Two-step verification is left as it is."""
+        from app.models.user import User
+        from app.services import audit
+        from app.services.security import password_problems
+
+        user = User.query.filter_by(email=email.strip().lower()).first()
+        if user is None or not user.is_staff:
+            raise click.ClickException("No staff account has that email")
+        if len(reason.strip()) < 10:
+            raise click.ClickException("Give a reason of at least 10 characters")
+        problems = password_problems(password, email=user.email, name=user.name)
+        if problems:
+            raise click.ClickException("Weak password: " + ", ".join(problems))
+        user.set_password(password)
+        user.must_change_password = require_change
+        user.failed_logins = 0
+        user.locked_until = None
+        audit.record(
+            "auth.password_reset",
+            target_type="user",
+            target_id=user.id,
+            reason=reason.strip(),
+            details={"via": "cli", "require_change": require_change},
+        )
+        db.session.commit()
+        click.echo(f"Password reset for account {user.id}. Two-step verification is unchanged.")
+
     @app.cli.command("check-config")
     def check_config():
         """Validate production settings without starting the server."""

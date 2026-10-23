@@ -51,6 +51,7 @@ To try live chat: sign in as `support@…`, open **Support desk → I am availab
 flask --app run.py db migrate -m "describe change"   # after editing models
 flask --app run.py db upgrade
 flask --app run.py create-staff --email a@b.org --name "Name" --role legal
+flask --app run.py reset-password --email a@b.org --reason "Forgot the password"   # asks for the new one; two-step stays on
 flask --app run.py housekeeping                        # close abandoned chats, list retention reviews
 flask --app run.py check-config                        # validate production settings
 scripts/check.sh                                       # lint, types, security, dependency audit, tests, build checks

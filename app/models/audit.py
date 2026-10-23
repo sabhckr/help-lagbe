@@ -17,6 +17,7 @@ SENSITIVE_EVENTS = (
     "case.break_glass",
     "support.supervisor_read",
     "audit.export",
+    "auth.password_reset",
 )
 
 
