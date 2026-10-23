@@ -94,7 +94,7 @@ def test_switching_language_keeps_saved_answers(client):
     assert r.status_code == 302 and r.headers["Location"].endswith("/report/3")
     page = client.get("/report/3").data.decode()
     assert '<html lang="bn"' in page and "Saved text that must survive a language switch." in page
-    assert "কী ঘটেছে, বলুন" in page
+    assert "কী হয়েছে, একটু বলবেন?" in page
     page = client.get("/report/1").data.decode()
     assert 'value="harassment" checked' in page
 

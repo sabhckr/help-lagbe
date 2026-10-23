@@ -31,7 +31,7 @@
   <div>
     <p class="helpline__name">{{ item.name_bn if current_lang() == 'bn' else item.name_en }}</p>
     <p class="helpline__for">{{ item.for_bn if current_lang() == 'bn' else item.for_en }}</p>
-    <p class="helpline__source"><a href="{{ item.source }}" rel="noopener noreferrer">{{ t('helpline.source') }}</a> · {{ t('helpline.checked', date=checked_on) }}</p>
+    <p class="helpline__source"><a href="{{ item.source }}" rel="noopener noreferrer">{{ t('helpline.source') }}</a> · {{ t('helpline.checked', date=checked_on()) }}</p>
   </div>
 </article>
 {% endmacro %}

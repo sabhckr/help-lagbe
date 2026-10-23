@@ -168,12 +168,11 @@ def _register_errors(app: Flask) -> None:
 def _register_context(app: Flask) -> None:
     @app.context_processor
     def inject_globals():
-        from app.helplines import CHECKED_ON, NATIONAL
+        from app.helplines import NATIONAL
 
         return {
             "P": P,
             "national_helplines": NATIONAL,
-            "checked_on": CHECKED_ON,
             "config": app.config,
             "site_name": app.config.get("SITE_NAME", "Help Lagbe?"),
             "now": datetime.utcnow(),
@@ -184,7 +183,7 @@ def _register_context(app: Flask) -> None:
 
     # Globals are visible inside imported macros, unlike context-processor values.
     app.jinja_env.globals["current_lang"] = get_locale
-    app.jinja_env.globals["checked_on"] = CHECKED_ON
+    app.jinja_env.globals["checked_on"] = lambda: CHECKED_ON.get(get_locale(), CHECKED_ON["en"])
 
     @app.template_filter("dt")
     def format_dt(value, fmt: str = "%d %b %Y, %H:%M"):

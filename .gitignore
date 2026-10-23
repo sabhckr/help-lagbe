@@ -19,3 +19,6 @@ instance/
 venv/
 .env.*
 !.env.example
+
+# Personal Claude Code settings for this checkout
+.claude/settings.local.json
