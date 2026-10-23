@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t"><title id="t">A person writing a report privately on a phone</title>
+<rect width="200" height="200" rx="24" fill="#FBF8F3"/>
+<rect x="110" y="40" width="58" height="108" rx="12" fill="#FFFFFF" stroke="#713747" stroke-width="3"/>
+<rect x="122" y="58" width="34" height="6" rx="3" fill="#DCECE7"/><rect x="122" y="72" width="26" height="6" rx="3" fill="#E8E1DB"/><rect x="122" y="86" width="30" height="6" rx="3" fill="#E8E1DB"/>
+<rect x="128" y="112" width="22" height="18" rx="4" fill="#713747"/><path d="M132 112v-5a7 7 0 0 1 14 0v5" fill="none" stroke="#713747" stroke-width="3"/>
+<circle cx="64" cy="70" r="22" fill="#E9C7AE"/><path d="M44 64c2-16 16-24 28-20 10 3 16 10 14 22-6-6-16-8-26-6-8 2-12 6-16 4z" fill="#3E3538"/>
+<path d="M22 166c0-36 18-58 42-60 24 2 42 24 42 60z" fill="#DCECE7" stroke="#1F4D43" stroke-width="2"/>
+<path d="M70 118c-10 4-22 14-26 34" fill="none" stroke="#1F4D43" stroke-width="10" stroke-linecap="round"/>
+<circle cx="50" cy="150" r="7" fill="#E9C7AE"/>
+</svg>

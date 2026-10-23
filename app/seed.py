@@ -89,7 +89,7 @@ def seed_demo() -> None:
     # ---- Cases (all fictional) ----
     c1, _ = case_service.create_case(
         {
-            "category": "eve_teasing",
+            "category": "harassment",
             "title": "Repeated harassment near a college gate in a fictional town",
             "narrative": "A group of young men gather at the college gate most afternoons and shout comments at students. "
             "It has happened for three weeks. We would like advice on what can be done and who can help. "
@@ -105,7 +105,7 @@ def seed_demo() -> None:
     )
     c2, _ = case_service.create_case(
         {
-            "category": "blackmail",
+            "category": "threats_blackmail",
             "title": "Threats to share private photos unless money is paid",
             "narrative": "Someone I met online is threatening to send private pictures to my family unless I pay them. "
             "They message me every day from new accounts. I am scared and do not know what to do first.",
@@ -123,7 +123,7 @@ def seed_demo() -> None:
     )
     c3, _ = case_service.create_case(
         {
-            "category": "bribery",
+            "category": "corruption_exploitation",
             "title": "Fees demanded for a free public service at a fictional office",
             "narrative": "At a local office, staff ask for 'speed money' before issuing a certificate that should be free. "
             "I have a receipt-less payment and a recording of the conversation. Several neighbours report the same.",
@@ -137,7 +137,7 @@ def seed_demo() -> None:
     )
     c4, _ = case_service.create_case(
         {
-            "category": "domestic_violence",
+            "category": "abuse_violence",
             "title": "Need help leaving a violent household safely",
             "narrative": "I am being hit regularly and I am worried for my child. I cannot call from home. I need to understand "
             "where we can go and whether there is legal help. Please do not contact my husband or his family.",
@@ -155,7 +155,7 @@ def seed_demo() -> None:
     )
     c5, _ = case_service.create_case(
         {
-            "category": "account_takeover",
+            "category": "online_harm",
             "title": "Facebook account hijacked and used to message contacts",
             "narrative": "My account was taken over two days ago. The attacker changed the email and is asking my contacts for money. "
             "I still have the phone number attached. I need help recovering it and warning people.",
@@ -166,7 +166,7 @@ def seed_demo() -> None:
     )
     c6, _ = case_service.create_case(
         {
-            "category": "corruption",
+            "category": "corruption_exploitation",
             "title": "Allocation of relief supplies diverted in a fictional union",
             "narrative": "Relief goods meant for flood-affected households were reportedly distributed to relatives of an official. "
             "There are lists and photographs. Several families who were on the list received nothing.",

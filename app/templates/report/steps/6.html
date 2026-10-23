@@ -1,0 +1,52 @@
+<h1 class="form-title">{{ t('step.6.question') }}</h1>
+<p class="hint">{{ t('step.6.help') }}</p>
+
+<dl class="summary" aria-label="{{ t('step.6.summary_label') }}">
+  <div class="summary__item">
+    <dt class="summary__label">{{ t('step.1.question') }}</dt>
+    <dd class="summary__value mb-0">{{ t('category.' ~ values.get('category', 'not_sure')) }}</dd>
+    <dd class="mb-0"><a class="summary__edit" href="{{ url_for('report.step', step=1) }}">{{ t('step.6.edit') }}</a></dd>
+  </div>
+  <div class="summary__item">
+    <dt class="summary__label">{{ t('step.2.question') }}</dt>
+    <dd class="summary__value mb-0">{{ t('step.2.' ~ values.get('immediate_danger', 'unsure')) }}{% if values.get('child_involved') == 'y' %} · {{ t('step.2.child') }}{% endif %}</dd>
+    <dd class="mb-0"><a class="summary__edit" href="{{ url_for('report.step', step=2) }}">{{ t('step.6.edit') }}</a></dd>
+  </div>
+  <div class="summary__item">
+    <dt class="summary__label">{{ t('step.3.question') }}</dt>
+    <dd class="summary__value mb-0">{{ values.get('narrative', '') }}</dd>
+    {% if values.get('approximate_time') or values.get('location_text') %}<dd class="small muted mb-0">{{ values.get('approximate_time', '') }}{% if values.get('approximate_time') and values.get('location_text') %} · {% endif %}{{ values.get('location_text', '') }}</dd>{% endif %}
+    <dd class="mb-0"><a class="summary__edit" href="{{ url_for('report.step', step=3) }}">{{ t('step.6.edit') }}</a></dd>
+  </div>
+  <div class="summary__item">
+    <dt class="summary__label">{{ t('step.4.question') }}</dt>
+    <dd class="summary__value mb-0">{{ t('step.4.' ~ ('confidential' if values.get('submission_type') == 'confidential' else 'anonymous')) }}</dd>
+    <dd class="mb-0"><a class="summary__edit" href="{{ url_for('report.step', step=4) }}">{{ t('step.6.edit') }}</a></dd>
+  </div>
+  <div class="summary__item">
+    <dt class="summary__label">{{ t('step.5.added') }}</dt>
+    <dd class="summary__value mb-0">{% if files %}{{ files|map(attribute='original_name')|join(', ') }}{% else %}{{ t('step.6.no_files') }}{% endif %}</dd>
+    <dd class="mb-0"><a class="summary__edit" href="{{ url_for('report.step', step=5) }}">{{ t('step.6.edit') }}</a></dd>
+  </div>
+</dl>
+
+<form method="post" action="{{ url_for('report.step', step=6) }}" novalidate data-once class="mt-5">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="hp" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+  <fieldset class="field {{ 'field--error' if errors.consent_process }}">
+    <legend class="sr-only">{{ t('step.6.consent_legend') }}</legend>
+    <label class="check"><input type="checkbox" name="consent_process" value="y" required aria-describedby="consent-help"><span>{{ t('step.6.consent_process') }}</span></label>
+    <p class="hint" id="consent-help">{{ t('step.6.consent_help') }}</p>
+    {% if errors.consent_process %}<p class="error-text">{{ t(errors.consent_process) }}</p>{% endif %}
+  </fieldset>
+  <div class="field">
+    <label class="check"><input type="checkbox" name="consent_publication" value="y" {% if values.get('consent_publication') == 'y' %}checked{% endif %} aria-describedby="pub-help"><span>{{ t('step.6.consent_publication') }}</span></label>
+    <p class="hint" id="pub-help">{{ t('step.6.consent_publication_help') }}</p>
+  </div>
+  <div class="notice notice--info"><p>{{ t('step.6.no_auto') }}</p></div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary" data-submit-report>{{ t('step.6.submit') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('report.step', step=5) }}">{{ t('report.back') }}</a>
+  </div>
+  <p class="small muted">{{ t('step.6.submit_note') }}</p>
+</form>

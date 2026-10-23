@@ -1,4 +1,4 @@
-"""Public site: information pages, published material, requests, PWA assets, language switch."""
+"""Public site: home, help, stories, about, safety, privacy, contact, language switch, PWA assets."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from flask import (
     Blueprint,
     abort,
     current_app,
-    flash,
     jsonify,
     make_response,
     redirect,
@@ -22,7 +21,6 @@ from app.crypto import encrypt_json
 from app.extensions import db, limiter
 from app.forms import PublicRequestForm
 from app.i18n import COOKIE_NAME
-from app.i18n import translate as t
 from app.models.case import Case
 from app.models.publication import STAGE_PUBLISHED, Correction, Publication, PublicRequest
 from app.models.settings import DepartmentConfig, EmergencyContact, SiteSetting
@@ -33,31 +31,11 @@ from app.services.support import availability
 
 public_bp = Blueprint("public", __name__)
 
-STATIC_PAGES = {
-    "get-help": "public/get_help.html",
-    "report-wrongdoing": "public/report_wrongdoing.html",
-    "awareness": "public/awareness.html",
-    "investigations": "public/investigations.html",
-    "legal-help": "public/legal_help.html",
-    "digital-safety": "public/digital_safety.html",
-    "live-support": "public/live_support.html",
-    "about": "public/about.html",
-    "safeguarding": "public/safeguarding.html",
-    "privacy": "public/privacy.html",
-    "editorial-policy": "public/editorial_policy.html",
-    "corrections": "public/corrections.html",
-    "complaints": "public/complaints.html",
-    "accessibility": "public/accessibility.html",
-    "contact": "public/contact.html",
-}
+STORY_KINDS = ("story", "investigation", "awareness", "campaign")
 
 
-def _contacts():
-    return EmergencyContact.query.filter_by(is_active=True).order_by(EmergencyContact.sort_order).all()
-
-
-def _departments():
-    return {d.department: d for d in DepartmentConfig.query.all()}
+def _verified_contacts():
+    return EmergencyContact.query.filter_by(is_active=True, verified=True).order_by(EmergencyContact.sort_order).all()
 
 
 def _setting(key: str, default: str = "") -> str:
@@ -65,70 +43,79 @@ def _setting(key: str, default: str = "") -> str:
     return row.value if row else default
 
 
+def _published():
+    return Publication.query.filter(
+        Publication.stage == STAGE_PUBLISHED,
+        Publication.withdrawn_at.is_(None),
+        Publication.kind.in_(STORY_KINDS),
+    ).order_by(Publication.published_at.desc())
+
+
 @public_bp.route("/")
 def home():
-    latest = (
-        Publication.query.filter_by(stage=STAGE_PUBLISHED)
-        .filter(Publication.withdrawn_at.is_(None))
-        .order_by(Publication.published_at.desc())
-        .limit(3)
-        .all()
-    )
+    latest = _published().limit(3).all()
     return render_template(
         "public/home.html",
         latest=latest,
         availability=availability(),
-        contacts=_contacts(),
-        announcement=_setting("announcement_" + (request.cookies.get(COOKIE_NAME) or "en")),
+        announcement=_setting("announcement_" + (request.cookies.get(COOKIE_NAME) or current_app.config["DEFAULT_LANGUAGE"])),
     )
 
 
-@public_bp.route("/<slug>")
-def page(slug: str):
-    template = STATIC_PAGES.get(slug)
-    if not template:
-        abort(404)
-    ctx = {"contacts": _contacts(), "departments": _departments(), "availability": availability()}
-    if slug == "awareness":
-        ctx["items"] = (
-            Publication.query.filter(
-                Publication.stage == STAGE_PUBLISHED, Publication.withdrawn_at.is_(None), Publication.kind.in_(("awareness", "campaign"))
-            )
-            .order_by(Publication.published_at.desc())
-            .all()
-        )
-    elif slug == "investigations":
-        ctx["items"] = (
-            Publication.query.filter(
-                Publication.stage == STAGE_PUBLISHED, Publication.withdrawn_at.is_(None), Publication.kind.in_(("story", "investigation"))
-            )
-            .order_by(Publication.published_at.desc())
-            .all()
-        )
-        ctx["verified_outcomes"] = _verified_outcomes()
-    elif slug == "corrections":
-        ctx["corrections"] = (
-            Correction.query.join(Publication)
-            .filter(Publication.stage == STAGE_PUBLISHED)
-            .order_by(Correction.created_at.desc())
-            .limit(50)
-            .all()
-        )
-    return render_template(template, **ctx)
+@public_bp.route("/help")
+def help_page():
+    departments = {d.department: d for d in DepartmentConfig.query.all()}
+    from app.forms import SupportStartForm
+
+    state = availability()
+    return render_template(
+        "public/help.html",
+        availability=state,
+        contacts=_verified_contacts(),
+        departments=departments,
+        support_form=SupportStartForm() if state["open"] else None,
+    )
 
 
-def _verified_outcomes():
-    from app.models.case import CaseOutcome
+@public_bp.route("/stories")
+def stories():
+    items = _published().all()
+    corrections = (
+        Correction.query.join(Publication)
+        .filter(Publication.stage == STAGE_PUBLISHED)
+        .order_by(Correction.created_at.desc())
+        .limit(30)
+        .all()
+    )
+    return render_template("public/stories.html", items=items, corrections=corrections)
 
-    return CaseOutcome.query.filter_by(verified=True).order_by(CaseOutcome.verified_at.desc()).limit(20).all()
 
-
-@public_bp.route("/p/<slug>")
-def publication(slug: str):
+@public_bp.route("/stories/<slug>")
+def story(slug: str):
     pub = Publication.query.filter_by(slug=slug).first_or_404()
     if not pub.is_public:
         abort(404)
-    return render_template("public/publication.html", pub=pub)
+    return render_template("public/story.html", pub=pub)
+
+
+@public_bp.route("/about")
+def about():
+    return render_template("public/about.html")
+
+
+@public_bp.route("/safety")
+def safety():
+    return render_template("public/safety.html")
+
+
+@public_bp.route("/privacy")
+def privacy():
+    return render_template("public/privacy.html")
+
+
+@public_bp.route("/contact")
+def contact():
+    return render_template("public/contact.html")
 
 
 @public_bp.route("/requests/new", methods=["GET", "POST"])
@@ -153,8 +140,6 @@ def new_request():
         audit.record("request.created", target_type="public_request", target_id=req.id, details={"type": req.request_type})
         db.session.commit()
         return render_template("public/request_submitted.html", reference=req.reference)
-    if request.method == "POST":
-        flash(t("validation.form_errors"), "error")
     return render_template("public/request_new.html", form=form)
 
 
@@ -218,8 +203,8 @@ def healthz():
 
 @public_bp.route("/quick-exit", methods=["POST", "GET"])
 def quick_exit():
-    """Safe exit: drop tracking/support sessions and leave for a neutral site."""
+    """Leave quickly: drop reporting and tracking state from this session, then go to a neutral page."""
     session.pop("tracked_cases", None)
     session.pop("support", None)
-    session.pop("report_receipt", None)
+    session.pop("report_draft", None)
     return redirect("https://www.google.com/search?q=weather", code=303)

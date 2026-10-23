@@ -78,9 +78,9 @@ app/
                      uploads (validation, hashing, scanning, custody), redaction, publication (gates), support, audit
   routes/            public site, auth (MFA), report, track, visitor support, workspace/* (cases, editorial,
                      support desk, moderation, admin), legacy redirects
-  templates/         layouts, macros, public pages (+ bilingual content fragments), workspace pages, error states
-  static/            app.css design system, app.js progressive enhancement, sw.js offline shell
+  templates/         layouts, macros, public pages (home, help, report steps, track, stories, about, safety, privacy, contact), workspace pages, error states
+  static/            app.css design system, boot.js + app.js progressive enhancement, art/ SVG illustrations, sw.js offline shell
 migrations/          Alembic
 tests/               pytest suite (auth, authz, reporting, uploads, cases, publication, support, moderation, admin, platform)
-docs/                AUDIT.md, PERMISSIONS.md, SECURITY.md, DELIVERY-REPORT.md
+docs/                AUDIT.md, REDESIGN-AUDIT.md, PERMISSIONS.md, SECURITY.md, DELIVERY-REPORT.md
 ```

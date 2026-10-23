@@ -31,12 +31,12 @@ def start():
     form = SupportStartForm()
     if not form.validate_on_submit():
         flash(t("validation.form_errors"), "error")
-        return redirect(url_for("public.page", slug="live-support"))
+        return redirect(url_for("public.help_page") + "#talk")
     try:
         conv, token = svc.start_conversation(language=get_locale(), topic=form.topic.data, safety_flag=bool(form.immediate_danger.data))
     except svc.SupportError as exc:
         flash(t(str(exc)), "error")
-        return redirect(url_for("public.page", slug="live-support"))
+        return redirect(url_for("public.help_page") + "#talk")
     session["support"] = {"reference": conv.reference, "token": token}
     return redirect(url_for("support.chat", reference=conv.reference))
 

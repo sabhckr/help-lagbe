@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t"><title id="t">A document with a tick, showing it was received</title>
+<rect width="200" height="200" rx="24" fill="#FBF8F3"/>
+<path d="M56 30h66l26 26v114H56z" fill="#FFFFFF" stroke="#713747" stroke-width="3" stroke-linejoin="round"/>
+<path d="M122 30v26h26" fill="#F5E2DC" stroke="#713747" stroke-width="3" stroke-linejoin="round"/>
+<rect x="70" y="78" width="60" height="6" rx="3" fill="#E8E1DB"/><rect x="70" y="94" width="48" height="6" rx="3" fill="#E8E1DB"/><rect x="70" y="110" width="54" height="6" rx="3" fill="#E8E1DB"/>
+<circle cx="140" cy="146" r="26" fill="#1F4D43"/><path d="M128 146l9 9 17-18" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,25 @@
+{% set categories = ['harassment', 'threats_blackmail', 'abuse_violence', 'corruption_exploitation', 'online_harm', 'child_safety', 'other', 'not_sure'] %}
+<h1 class="form-title">{{ t('step.1.question') }}</h1>
+<p class="hint">{{ t('step.1.help') }}</p>
+<form method="post" novalidate data-autosave="report-step-1" data-once>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <fieldset class="field {{ 'field--error' if errors.category }}" {% if errors.category %}aria-describedby="category-error"{% endif %}>
+    <legend class="sr-only">{{ t('step.1.question') }}</legend>
+    <div class="choices choice-cards">
+      {% for key in categories %}
+      <label class="choice">
+        <input type="radio" name="category" value="{{ key }}" {% if values.get('category') == key %}checked{% endif %}>
+        <span>
+          <span class="choice__title">{{ t('category.' ~ key) }}</span>
+          <span class="choice__desc">{{ t('category.' ~ key ~ '_desc') }}</span>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if errors.category %}<p class="error-text" id="category-error">{{ t(errors.category) }}</p>{% endif %}
+  </fieldset>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ t('report.continue') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('public.home') }}">{{ t('report.back_home') }}</a>
+  </div>
+</form>

@@ -1,6 +1,6 @@
 from app import db
 from app.models import Case, ModerationAppeal, ModerationFlag, PublicRequest
-from tests.conftest import login
+from tests.conftest import case_by_text, login
 
 
 def test_public_request_flow_and_contact_encryption(client):
@@ -52,7 +52,7 @@ def test_public_request_honeypot_and_complaint_routing(client):
 
 
 def test_flag_hold_and_appeal_by_different_moderator(client):
-    case = Case.query.filter_by(category="corruption").one()
+    case = case_by_text("Relief goods")
     login(client, "editorial")
     r = client.post(
         f"/workspace/cases/{case.reference}/flag",

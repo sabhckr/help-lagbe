@@ -1,0 +1,73 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import art, helpline, empty %}
+{% from "macros/forms.html" import field, checkbox, submit %}
+{% block title %}{{ t('help.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<header class="narrow">
+  <h1>{{ t('help.heading') }}</h1>
+  <p class="lead">{{ t('help.lead') }}</p>
+</header>
+
+<section id="now" class="mt-5" aria-labelledby="now-title">
+  <h2 id="now-title">{{ t('help.now_title') }}</h2>
+  <div class="notice notice--safety">
+    <p><strong>{{ t('help.now_text') }}</strong></p>
+    <p>{{ t('help.now_safe_steps') }}</p>
+  </div>
+  <div class="helplines">{% for n in national_helplines %}{{ helpline(n) }}{% endfor %}</div>
+  <p class="small mt-2">{{ t('home.danger_note') }}</p>
+  {% if contacts %}
+  <h3>{{ t('help.verified_local') }}</h3>
+  <ul class="list-plain stack-sm">
+    {% for c in contacts %}
+    <li class="card"><strong>{{ c.name_bn if current_locale == 'bn' and c.name_bn else c.name_en }}</strong> — <a href="tel:{{ c.number }}">{{ c.number }}</a>
+      <p class="small muted mb-0">{{ t('help.verified_on', date=c.verified_at|d) }}</p></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section id="talk" class="mt-5" aria-labelledby="talk-title">
+  <h2 id="talk-title">{{ t('help.talk_title') }}</h2>
+  <p class="status-dot {{ 'is-open' if availability.open else 'is-closed' }}">{{ t('support.open_now') if availability.open else t('support.closed_now') }}</p>
+  {% if availability.open %}
+    <p>{{ t('help.talk_open_text') }}</p>
+    {% if support_form %}
+    <form method="post" action="{{ url_for('support.start') }}" class="card" novalidate data-once>
+      {{ support_form.hidden_tag() }}
+      {{ field(support_form.topic, help='help.topic_help') }}
+      {{ checkbox(support_form.immediate_danger, help='help.talk_danger_help') }}
+      {{ checkbox(support_form.consent) }}
+      <div class="form-actions">{{ submit('help.start_chat') }}</div>
+    </form>
+    {% endif %}
+  {% else %}
+    <div class="notice notice--info">
+      <h3>{{ t('help.talk_closed_title') }}</h3>
+      <p>{{ t('help.talk_closed_text') }}</p>
+      {% if availability.hours_bn or availability.hours_en %}<p><strong>{{ t('support.hours') }}:</strong> {{ availability.hours_bn if current_locale == 'bn' and availability.hours_bn else availability.hours_en }}</p>{% endif %}
+    </div>
+    <p>{{ t('help.talk_alternatives') }}</p>
+    <div class="cluster">
+      <a class="btn btn-primary" href="{{ url_for('report.new') }}">{{ t('home.action_report') }}</a>
+      <a class="btn btn-secondary" href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a>
+    </div>
+  {% endif %}
+</section>
+
+<section id="report" class="mt-5" aria-labelledby="report-title">
+  <h2 id="report-title">{{ t('help.report_title') }}</h2>
+  <div class="card card--teal">
+    <p>{{ t('help.report_text') }}</p>
+    <a class="btn btn-primary" href="{{ url_for('report.new') }}">{{ t('home.action_report') }}</a>
+  </div>
+</section>
+
+<section id="info" class="mt-5" aria-labelledby="info-title">
+  <h2 id="info-title">{{ t('help.info_title') }}</h2>
+  <div class="grid grid-2">
+    <a class="card card-link" href="{{ url_for('public.safety') }}#legal"><span class="card-link__cta">{{ t('help.legal_title') }}</span><span class="muted">{{ t('help.legal_text') }}</span></a>
+    <a class="card card-link" href="{{ url_for('public.safety') }}#digital"><span class="card-link__cta">{{ t('help.digital_title') }}</span><span class="muted">{{ t('help.digital_text') }}</span></a>
+  </div>
+</section>
+{% endblock %}

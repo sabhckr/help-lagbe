@@ -12,8 +12,8 @@ from tests.conftest import login, user_by_role
 def test_closed_when_no_agent_is_present(client):
     r = client.get("/support/status")
     assert r.get_json() == {"open": False, "agents_online": 0, "waiting": 0, "service_enabled": True}
-    r = client.get("/live-support")
-    assert b"No agent is available" in r.data and b"start-chat" not in r.data
+    r = client.get("/help")
+    assert b"No one is available right now" in r.data and b'action="/support/start"' not in r.data
     r = client.post("/support/start", data={"topic": "other", "consent": "y"})
     assert r.status_code == 302 and SupportConversation.query.count() == 0
 

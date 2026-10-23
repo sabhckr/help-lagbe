@@ -47,16 +47,16 @@ def test_department_cannot_be_marked_staffed_without_staff(client):
 
 
 def test_unverified_contacts_hidden_from_public_until_verified(client):
-    r = client.get("/get-help")
-    assert b"999" not in r.data.split(b"contacts-title")[1][:2000] if b"contacts-title" in r.data else True
-    assert b"No verified emergency numbers" in r.data
+    r = client.get("/help")
+    assert b'href="tel:999"' in r.data and b"Source" in r.data  # national number with its source
+    assert b'href="tel:16430"' not in r.data and b'href="tel:1098"' not in r.data  # unverified, staff-entered
     login(client, "admin")
-    contact = EmergencyContact.query.filter_by(number="999").one()
+    contact = EmergencyContact.query.filter_by(number="16430").one()
     client.post(f"/workspace/admin/contacts/{contact.id}/verify", data={"verification_note": "Called on 22 Oct, operator answered"})
     assert EmergencyContact.query.get(contact.id).verified
     client.post("/auth/logout")
-    r = client.get("/get-help")
-    assert b'href="tel:999"' in r.data
+    r = client.get("/help")
+    assert b'href="tel:16430"' in r.data and b"Checked by our staff" in r.data
 
 
 def test_audit_export_requires_reason_and_logs_itself(client):
@@ -71,7 +71,7 @@ def test_audit_export_requires_reason_and_logs_itself(client):
 
 def test_retention_purge_only_for_closed_cases_and_logged(client):
     login(client, "admin")
-    case = Case.query.filter_by(category="domestic_violence").one()
+    case = Case.query.filter_by(category="abuse_violence").one()
     r = client.post(
         f"/workspace/admin/retention/{case.reference}/purge-identity",
         data={"reason": "Retention period elapsed; identity no longer needed."},

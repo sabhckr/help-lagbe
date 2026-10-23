@@ -55,7 +55,7 @@ def test_lifecycle_transitions_are_enforced(app):
 
 def test_status_change_needs_reason_via_http(client):
     login(client, "supervisor")
-    case = Case.query.filter_by(category="eve_teasing").one()
+    case = Case.query.filter_by(category="harassment").one()
     r = client.post(f"/workspace/cases/{case.reference}/status", data={"to_status": "resolved", "reason": "ok"})
     assert r.status_code == 302 and case.status == "under_review"
     r = client.post(
@@ -65,7 +65,7 @@ def test_status_change_needs_reason_via_http(client):
 
 
 def test_reopen_requires_permission(client):
-    case = Case.query.filter_by(category="eve_teasing").one()
+    case = Case.query.filter_by(category="harassment").one()
     sup = user_by_role("supervisor")
     svc.change_status(case, sup, "resolved", "Resolved for the purpose of this test.")
     login(client, "support")  # support lacks case.reopen
@@ -76,7 +76,7 @@ def test_reopen_requires_permission(client):
 
 
 def test_outcomes_require_confirmation_and_second_person_verification(app):
-    case = Case.query.filter_by(category="domestic_violence").one()
+    case = Case.query.filter_by(category="abuse_violence").one()
     legal = user_by_role("legal")
     with pytest.raises(CaseError):
         svc.record_outcome(
@@ -112,7 +112,7 @@ def test_outcomes_require_confirmation_and_second_person_verification(app):
 
 
 def test_referral_confirmation_requires_reference(app):
-    case = Case.query.filter_by(category="domestic_violence").one()
+    case = Case.query.filter_by(category="abuse_violence").one()
     referral = case.referrals[0]
     with pytest.raises(CaseError):
         svc.update_referral(referral, user_by_role("legal"), "confirmed", "", None)
@@ -122,7 +122,7 @@ def test_referral_confirmation_requires_reference(app):
 
 def test_reporter_update_refuses_identifiers(client):
     login(client, "support")
-    case = Case.query.filter_by(category="eve_teasing").one()
+    case = Case.query.filter_by(category="harassment").one()
     r = client.post(f"/workspace/cases/{case.reference}/update", data={"body": "Call us at 01712345678 tomorrow."})
     assert r.status_code == 302
     assert not any(u.kind == "message" and "01712345678" in u.body for u in case.updates)

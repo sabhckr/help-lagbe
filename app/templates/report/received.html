@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import art, helpline %}
+{% block title %}{{ t('received.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  <div class="received-head">
+    <div>
+      <p class="eyebrow">{{ t('received.eyebrow') }}</p>
+      <h1>{{ t('received.heading') }}</h1>
+    </div>
+    {{ art('report-received', class='received-head__art') }}
+  </div>
+  <p class="lead">{{ t('received.lead') }}</p>
+
+  {% if receipt.safety %}
+  <div class="notice notice--safety" role="note">
+    <h2>{{ t('received.safety_title') }}</h2>
+    <p>{{ t('received.safety_text') }}</p>
+    <div class="helplines">{% for n in national_helplines %}{{ helpline(n) }}{% endfor %}</div>
+  </div>
+  {% endif %}
+
+  <dl class="reference-box mt-3">
+    <div>
+      <dt>{{ t('track.reference') }}</dt>
+      <dd><span class="reference-value" id="ref">{{ receipt.reference }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy="ref">{{ t('ui.copy') }}</button></dd>
+    </div>
+    <div>
+      <dt>{{ t('track.secret') }}</dt>
+      <dd><span class="reference-value" id="secret">{{ receipt.secret }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy="secret">{{ t('ui.copy') }}</button></dd>
+    </div>
+  </dl>
+  <div class="notice notice--warn mt-3">
+    <p><strong>{{ t('received.keep_title') }}</strong> {{ t('received.keep_text') }}</p>
+  </div>
+
+  <h2>{{ t('received.next_title') }}</h2>
+  <ol class="stack-sm">
+    <li>{{ t('received.next1') }}</li>
+    <li>{{ t('received.next2') }}</li>
+    <li>{{ t('received.next3') }}</li>
+  </ol>
+
+  <div class="cluster mt-3 no-print">
+    <button type="button" class="btn btn-ghost" onclick="window.print()">{{ t('ui.print') }}</button>
+    <a class="btn btn-secondary" href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a>
+  </div>
+
+  <form method="post" action="{{ url_for('report.dismiss') }}" class="mt-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primary" type="submit">{{ t('received.saved_button') }}</button>
+    <p class="small muted mt-2">{{ t('received.saved_note') }}</p>
+  </form>
+</div>
+{% endblock %}

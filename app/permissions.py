@@ -61,21 +61,15 @@ ROLE_DEPARTMENT = {
 
 # Which department first sees a case of a given category (human triage can re-route).
 CATEGORY_DEPARTMENT = {
-    "bullying": DEPT_SUPPORT,
-    "eve_teasing": DEPT_SUPPORT,
-    "sexual_harassment": DEPT_SUPPORT,
-    "child_abuse": DEPT_SUPPORT,
-    "domestic_violence": DEPT_SUPPORT,
-    "blackmail": DEPT_SUPPORT,
-    "threats": DEPT_SUPPORT,
-    "exploitation": DEPT_SUPPORT,
-    "bribery": DEPT_EDITORIAL,
-    "corruption": DEPT_EDITORIAL,
-    "cyber_harassment": DEPT_CYBER,
-    "account_takeover": DEPT_CYBER,
-    "image_abuse": DEPT_CYBER,
-    "legal_question": DEPT_LEGAL,
+    # Eight plain-language groups shown to reporters. Staff can re-route any case.
+    "harassment": DEPT_SUPPORT,  # bullying, eve-teasing, street or workplace harassment
+    "threats_blackmail": DEPT_SUPPORT,  # threats, coercion, blackmail
+    "abuse_violence": DEPT_SUPPORT,  # physical, sexual or domestic abuse
+    "corruption_exploitation": DEPT_EDITORIAL,  # bribery, misuse of office, exploitation
+    "online_harm": DEPT_CYBER,  # hacked accounts, online abuse, private images
+    "child_safety": DEPT_SUPPORT,  # any concern about a child; always flagged
     "other": DEPT_SUPPORT,
+    "not_sure": DEPT_SUPPORT,  # reporter is unsure; triage decides
 }
 CATEGORIES = tuple(CATEGORY_DEPARTMENT.keys())
 

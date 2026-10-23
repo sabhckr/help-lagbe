@@ -2,5 +2,5 @@
 {% block title %}{{ t('support.left_title') }} · {{ t('site.name') }}{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<div class="narrow"><h1>{{ t('support.left_title') }}</h1><p class="lead">{{ t('support.left_text') }}</p><div class="cluster"><a class="btn btn-primary" href="{{ url_for('public.page', slug='live-support') }}">{{ t('nav.live_support') }}</a><a class="btn btn-ghost" href="{{ url_for('public.page', slug='get-help') }}">{{ t('nav.get_help') }}</a></div></div>
+<div class="narrow"><h1>{{ t('support.left_title') }}</h1><p class="lead">{{ t('support.left_text') }}</p><div class="cluster"><a class="btn btn-primary" href="{{ url_for('public.help_page') }}#talk">{{ t('nav.get_help') }}</a><a class="btn btn-ghost" href="{{ url_for('public.home') }}">{{ t('error.go_home') }}</a></div></div>
 {% endblock %}

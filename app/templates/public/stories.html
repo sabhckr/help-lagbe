@@ -1,0 +1,49 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import art, empty %}
+{% block title %}{{ t('stories.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<header class="narrow">
+  <h1>{{ t('stories.heading') }}</h1>
+  <p class="lead">{{ t('stories.lead') }}</p>
+</header>
+<div class="notice notice--info mt-3">
+  <h2>{{ t('stories.labels_title') }}</h2>
+  <ul class="list-plain stack-sm">
+    <li><strong>{{ t('pub_label.reported_allegation') }}:</strong> {{ t('pub_label_help.reported_allegation') }}</li>
+    <li><strong>{{ t('pub_label.corroborated_finding') }}:</strong> {{ t('pub_label_help.corroborated_finding') }}</li>
+    <li><strong>{{ t('pub_label.official_statement') }}:</strong> {{ t('pub_label_help.official_statement') }}</li>
+    <li><strong>{{ t('pub_label.court_established_outcome') }}:</strong> {{ t('pub_label_help.court_established_outcome') }}</li>
+    <li><strong>{{ t('pub_label.awareness_material') }}:</strong> {{ t('pub_label_help.awareness_material') }}</li>
+  </ul>
+</div>
+<section class="mt-5" aria-labelledby="items-title">
+  <h2 id="items-title">{{ t('stories.items_title') }}</h2>
+  {% if items %}
+  <div class="grid grid-2">
+    {% for p in items %}
+    <a class="card card-link" href="{{ url_for('public.story', slug=p.slug) }}">
+      <span class="badge badge-label badge-label-{{ p.label }}">{{ t('pub_label.' ~ p.label) }}</span>
+      <span class="card-link__cta">{{ p.headline_bn if current_locale == 'bn' and p.headline_bn else p.headline }}</span>
+      <span class="small muted">{{ p.published_at|d }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+    {{ empty('stories.none_title', 'stories.none_text', art_name='calm-empty') }}
+  {% endif %}
+</section>
+<section id="corrections" class="mt-5" aria-labelledby="corrections-title">
+  <h2 id="corrections-title">{{ t('stories.corrections_title') }}</h2>
+  <p>{{ t('stories.corrections_text') }}</p>
+  {% if corrections %}
+  <ul class="timeline">
+    {% for c in corrections %}
+    <li><time datetime="{{ c.created_at.isoformat() }}">{{ c.created_at|d }}</time>
+      <strong>{{ t('correction.' ~ c.kind) }}</strong> · <a href="{{ url_for('public.story', slug=c.publication.slug) }}">{{ c.publication.headline_bn if current_locale == 'bn' and c.publication.headline_bn else c.publication.headline }}</a>
+      <p>{{ c.text_bn if current_locale == 'bn' and c.text_bn else c.text }}</p></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">{{ t('stories.corrections_none') }}</p>{% endif %}
+  <a class="btn btn-secondary" href="{{ url_for('public.new_request', type='correction') }}">{{ t('request.request_correction') }}</a>
+</section>
+{% endblock %}

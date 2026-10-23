@@ -1,0 +1,81 @@
+{% set confidential = values.get('submission_type') == 'confidential' %}
+<h1 class="form-title">{{ t('step.4.question') }}</h1>
+<p class="hint">{{ t('step.4.help') }}</p>
+<form method="post" novalidate data-autosave="report-step-4" data-once data-identity-toggle>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <fieldset class="field {{ 'field--error' if errors.submission_type }}">
+    <legend class="sr-only">{{ t('step.4.question') }}</legend>
+    <div class="choices">
+      <label class="choice">
+        <input type="radio" name="submission_type" value="anonymous" {% if not confidential %}checked{% endif %}>
+        <span><span class="choice__title">{{ t('step.4.anonymous') }}</span><span class="choice__desc">{{ t('step.4.anonymous_desc') }}</span></span>
+      </label>
+      <label class="choice">
+        <input type="radio" name="submission_type" value="confidential" {% if confidential %}checked{% endif %}>
+        <span><span class="choice__title">{{ t('step.4.confidential') }}</span><span class="choice__desc">{{ t('step.4.confidential_desc') }}</span></span>
+      </label>
+    </div>
+    {% if errors.submission_type %}<p class="error-text">{{ t(errors.submission_type) }}</p>{% endif %}
+  </fieldset>
+
+  <section class="notice notice--info mt-3" id="who" aria-labelledby="who-title">
+    <h2 id="who-title">{{ t('step.4.who_title') }}</h2>
+    <ul class="list-plain stack-sm">
+      <li>{{ t('step.4.who1') }}</li>
+      <li>{{ t('step.4.who2') }}</li>
+      <li>{{ t('step.4.who3') }}</li>
+      <li>{{ t('step.4.who4') }}</li>
+    </ul>
+    <p class="small"><a href="{{ url_for('public.privacy') }}">{{ t('step.4.privacy_link') }}</a></p>
+  </section>
+
+  <div class="stack mt-3" data-identity-fields {% if not confidential %}hidden{% endif %}>
+    <h2>{{ t('step.4.details_title') }}</h2>
+    <p class="hint">{{ t('step.4.details_help') }}</p>
+    <div class="field {{ 'field--error' if errors.identity_name }}">
+      <label for="identity_name">{{ t('step.4.name') }}</label>
+      <input type="text" id="identity_name" name="identity_name" value="{{ values.get('identity_name', '') }}" maxlength="120" autocomplete="name">
+      {% if errors.identity_name %}<p class="error-text">{{ t(errors.identity_name) }}</p>{% endif %}
+    </div>
+    <div class="grid grid-2">
+      <div class="field {{ 'field--error' if errors.identity_phone }}">
+        <label for="identity_phone">{{ t('step.4.phone') }}</label>
+        <input type="tel" id="identity_phone" name="identity_phone" value="{{ values.get('identity_phone', '') }}" maxlength="40" inputmode="tel" autocomplete="tel">
+        {% if errors.identity_phone %}<p class="error-text">{{ t(errors.identity_phone) }}</p>{% endif %}
+      </div>
+      <div class="field {{ 'field--error' if errors.identity_email }}">
+        <label for="identity_email">{{ t('step.4.email') }}</label>
+        <input type="email" id="identity_email" name="identity_email" value="{{ values.get('identity_email', '') }}" maxlength="190" inputmode="email" autocomplete="email">
+        {% if errors.identity_email %}<p class="error-text">{{ t(errors.identity_email) }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="field {{ 'field--error' if errors.contact_preference }}">
+      <label for="contact_preference">{{ t('step.4.contact_how') }}</label>
+      <select id="contact_preference" name="contact_preference">
+        {% for key in ['tracking_page', 'phone', 'email', 'none'] %}
+        <option value="{{ key }}" {% if values.get('contact_preference', 'tracking_page') == key %}selected{% endif %}>{{ t('step.4.contact.' ~ key) }}</option>
+        {% endfor %}
+      </select>
+      {% if errors.contact_preference %}<p class="error-text">{{ t(errors.contact_preference) }}</p>{% endif %}
+    </div>
+    <div class="field">
+      <label for="safe_hours">{{ t('step.4.safe_hours') }}</label>
+      <input type="text" id="safe_hours" name="safe_hours" value="{{ values.get('safe_hours', '') }}" maxlength="120">
+    </div>
+    <div class="field">
+      <label for="do_not_contact">{{ t('step.4.do_not_contact') }}</label>
+      <input type="text" id="do_not_contact" name="do_not_contact" value="{{ values.get('do_not_contact', '') }}" maxlength="300">
+    </div>
+    <div class="field">
+      <label for="safe_contact_notes">{{ t('step.4.safe_notes') }}</label>
+      <textarea id="safe_contact_notes" name="safe_contact_notes" rows="3" maxlength="1000">{{ values.get('safe_contact_notes', '') }}</textarea>
+    </div>
+    <div class="field">
+      <label class="check"><input type="checkbox" name="consent_contact" value="y" {% if values.get('consent_contact') == 'y' %}checked{% endif %}><span>{{ t('step.4.consent_contact') }}</span></label>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ t('report.continue') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('report.step', step=3) }}">{{ t('report.back') }}</a>
+  </div>
+</form>

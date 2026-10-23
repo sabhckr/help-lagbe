@@ -1,0 +1,37 @@
+<h1 class="form-title">{{ t('step.3.question') }}</h1>
+<p class="hint">{{ t('step.3.help') }}</p>
+<ul class="small muted">
+  <li>{{ t('step.3.prompt_what') }}</li>
+  <li>{{ t('step.3.prompt_when') }}</li>
+  <li>{{ t('step.3.prompt_where') }}</li>
+  <li>{{ t('step.3.prompt_who') }}</li>
+</ul>
+<div class="notice notice--info"><p>{{ t('step.3.warning') }}</p></div>
+<form method="post" novalidate data-autosave="report-step-3" data-once>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="field {{ 'field--error' if errors.narrative }}">
+    <label for="narrative">{{ t('step.3.narrative_label') }} <span aria-hidden="true">*</span><span class="sr-only">({{ t('ui.required') }})</span></label>
+    <p class="hint" id="narrative-help">{{ t('step.3.narrative_help') }}</p>
+    <textarea id="narrative" name="narrative" rows="10" maxlength="20000" required aria-describedby="narrative-help{{ ' narrative-error' if errors.narrative }}">{{ values.get('narrative', '') }}</textarea>
+    <p class="counter" aria-live="polite" data-counter-for="narrative"></p>
+    {% if errors.narrative %}<p class="error-text" id="narrative-error">{{ t(errors.narrative) }}</p>{% endif %}
+  </div>
+  <div class="grid grid-2">
+    <div class="field {{ 'field--error' if errors.approximate_time }}">
+      <label for="approximate_time">{{ t('step.3.when_label') }}</label>
+      <p class="hint" id="when-help">{{ t('step.3.when_help') }}</p>
+      <input type="text" id="approximate_time" name="approximate_time" value="{{ values.get('approximate_time', '') }}" maxlength="120" aria-describedby="when-help" autocomplete="off">
+      {% if errors.approximate_time %}<p class="error-text">{{ t(errors.approximate_time) }}</p>{% endif %}
+    </div>
+    <div class="field {{ 'field--error' if errors.location_text }}">
+      <label for="location_text">{{ t('step.3.where_label') }}</label>
+      <p class="hint" id="where-help">{{ t('step.3.where_help') }}</p>
+      <input type="text" id="location_text" name="location_text" value="{{ values.get('location_text', '') }}" maxlength="200" aria-describedby="where-help" autocomplete="off">
+      {% if errors.location_text %}<p class="error-text">{{ t(errors.location_text) }}</p>{% endif %}
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ t('report.continue') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('report.step', step=2) }}">{{ t('report.back') }}</a>
+  </div>
+</form>

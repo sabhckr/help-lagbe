@@ -1,23 +1,22 @@
 {% extends "layouts/base.html" %}
 {% from "macros/forms.html" import field, submit %}
-{% block title %}{{ t('track.page_title') }} · {{ t('site.name') }}{% endblock %}
+{% block title %}{{ t('track.title_tag') }} · {{ t('site.name') }}{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
 <div class="narrow">
-  <h1>{{ t('track.page_title') }}</h1>
+  <h1>{{ t('track.heading') }}</h1>
   <p class="lead">{{ t('track.lead') }}</p>
-  <div class="card">
-    <form method="post" novalidate data-once>
-      {{ form.hidden_tag() }}
-      {{ field(form.reference, placeholder='track.reference_placeholder', autocomplete='off', help='track.reference_help') }}
-      {{ field(form.secret, placeholder='track.secret_placeholder', autocomplete='off', help='track.secret_help') }}
-      <div class="form-actions">{{ submit('track.open_button') }}</div>
-    </form>
-  </div>
-  <p class="small muted">{{ t('track.lost_key') }}</p>
+  <div class="notice notice--info"><p>{{ t('track.no_account') }}</p></div>
+  <form method="post" class="card" novalidate data-once>
+    {{ form.hidden_tag() }}
+    {{ field(form.reference, placeholder='track.reference_placeholder', autocomplete='off', help='track.reference_help', required=true) }}
+    {{ field(form.secret, placeholder='track.secret_placeholder', autocomplete='off', help='track.secret_help', required=true) }}
+    <div class="form-actions">{{ submit('track.open_button') }}</div>
+  </form>
+  <p class="small muted mt-3">{{ t('track.lost_key') }}</p>
   {% if session.get('tracked_cases') %}
   <h2>{{ t('track.recent_on_device') }}</h2>
-  <ul>{% for ref in session['tracked_cases'] %}<li><a href="{{ url_for('track.view', reference=ref) }}" class="mono">{{ ref }}</a></li>{% endfor %}</ul>
+  <ul class="list-plain stack-sm">{% for ref in session['tracked_cases'] %}<li><a href="{{ url_for('track.view', reference=ref) }}" class="mono">{{ ref }}</a></li>{% endfor %}</ul>
   <form method="post" action="{{ url_for('track.forget_all') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm">{{ t('track.forget_all') }}</button></form>
   {% endif %}
 </div>

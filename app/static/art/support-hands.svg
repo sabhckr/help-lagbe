@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t"><title id="t">Two people, one offering support to the other</title>
+<rect width="200" height="200" rx="24" fill="#FBF8F3"/>
+<circle cx="66" cy="72" r="22" fill="#E9C7AE"/><path d="M44 66c2-16 16-24 28-20 10 3 16 10 14 22-6-6-16-8-26-6-8 2-12 6-16 4z" fill="#3E3538"/>
+<path d="M30 168c0-34 16-54 36-58 10-2 18 0 26 0s16-2 26 0c20 4 36 24 36 58z" fill="#DCECE7" stroke="#1F4D43" stroke-width="2"/>
+<circle cx="134" cy="72" r="22" fill="#D9A987"/><path d="M114 70c0-16 12-26 24-24 12 2 20 12 18 26-4-8-12-10-20-8-8 2-14 4-22 6z" fill="#2B2226"/>
+<path d="M104 168c0-34 16-54 36-58 10-2 18 0 26 0s16-2 26 0c4 1 6 2 8 4v54z" fill="#713747"/>
+<path d="M82 124c10 6 20 6 30 0" fill="none" stroke="#713747" stroke-width="7" stroke-linecap="round"/>
+</svg>

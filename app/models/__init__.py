@@ -11,6 +11,7 @@ from app.models.case import (
     SeverityAssessment,
     StatusChange,
 )
+from app.models.draft import DraftFile, ReportDraft
 from app.models.evidence import CustodyRecord, Evidence
 from app.models.identity import ReporterIdentity
 from app.models.legal import LegalIntake
@@ -28,6 +29,8 @@ from app.models.support import AgentPresence, SupportConversation, SupportMessag
 from app.models.user import User
 
 __all__ = [
+    "DraftFile",
+    "ReportDraft",
     "AuditEvent",
     "Case",
     "CaseAssignment",

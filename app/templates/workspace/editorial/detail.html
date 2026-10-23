@@ -4,7 +4,7 @@
 {% block title %}{{ pub.headline }} · {{ t('ws.publications') }}{% endblock %}
 {% block workspace %}
 <div class="page-head">
-  <div><p class="eyebrow">{{ t('pub_kind.' ~ pub.kind) }}{% if pub.case %} · <a class="mono" href="{{ url_for('workspace.case_detail', reference=pub.case.reference) }}">{{ pub.case.reference }}</a>{% endif %}</p><h1>{{ pub.headline }}</h1><div class="cluster">{{ stage_badge(pub.stage) }} {{ label_badge(pub.label) }}{% if pub.is_public %}<a class="small" href="{{ url_for('public.publication', slug=pub.slug) }}">{{ t('publication.view_public') }}</a>{% endif %}</div></div>
+  <div><p class="eyebrow">{{ t('pub_kind.' ~ pub.kind) }}{% if pub.case %} · <a class="mono" href="{{ url_for('workspace.case_detail', reference=pub.case.reference) }}">{{ pub.case.reference }}</a>{% endif %}</p><h1>{{ pub.headline }}</h1><div class="cluster">{{ stage_badge(pub.stage) }} {{ label_badge(pub.label) }}{% if pub.is_public %}<a class="small" href="{{ url_for('public.story', slug=pub.slug) }}">{{ t('publication.view_public') }}</a>{% endif %}</div></div>
   <div class="small muted right">{{ t('publication.drafted_by') }}: {{ pub.drafted_by.name }}<br>{% if pub.approved_by %}{{ t('publication.approved_by') }}: {{ pub.approved_by.name }}<br>{% endif %}{% if pub.published_at %}{{ t('publication.published_at') }}: {{ pub.published_at|dt }}{% endif %}</div>
 </div>
 

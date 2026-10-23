@@ -1,2 +1,36 @@
-{% extends "public/_page.html" %}
-{% set page_key = 'about' %}{% set slug = 'about' %}
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('about.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<article class="narrow">
+  <h1>{{ t('about.heading') }}</h1>
+  <p class="lead">{{ t('about.lead') }}</p>
+  <p class="identity-line">{{ t('site.identity') }}</p>
+
+  <h2>{{ t('about.how_title') }}</h2>
+  <ol class="stack-sm">
+    <li>{{ t('about.how1') }}</li>
+    <li>{{ t('about.how2') }}</li>
+    <li>{{ t('about.how3') }}</li>
+    <li>{{ t('about.how4') }}</li>
+  </ol>
+
+  <h2 id="safeguarding">{{ t('about.safeguarding_title') }}</h2>
+  <ul class="stack-sm">
+    <li>{{ t('about.safe1') }}</li>
+    <li>{{ t('about.safe2') }}</li>
+    <li>{{ t('about.safe3') }}</li>
+    <li>{{ t('about.safe4') }}</li>
+  </ul>
+
+  <h2 id="editorial">{{ t('about.editorial_title') }}</h2>
+  <p>{{ t('about.editorial_text') }}</p>
+
+  <h2>{{ t('about.not_title') }}</h2>
+  <ul class="stack-sm">
+    <li>{{ t('about.not1') }}</li>
+    <li>{{ t('about.not2') }}</li>
+    <li>{{ t('about.not3') }}</li>
+  </ul>
+  <p><a href="{{ url_for('public.privacy') }}">{{ t('nav.privacy') }}</a> · <a href="{{ url_for('public.safety') }}">{{ t('nav.safety') }}</a> · <a href="{{ url_for('public.contact') }}">{{ t('nav.contact') }}</a></p>
+</article>
+{% endblock %}

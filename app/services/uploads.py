@@ -65,6 +65,41 @@ def _sniff_ok(ext: str, head: bytes) -> bool:
     return any(head.startswith(p) for p in prefixes)
 
 
+def mime_for(ext: str) -> str:
+    return _SIGNATURES[ext][0]
+
+
+def read_validated(file: FileStorage) -> tuple[str, bytes]:
+    """Check extension, content signature and size before anything is stored. Returns (ext, bytes)."""
+    cfg = current_app.config
+    if not file or not file.filename:
+        raise UploadError("upload.error_empty")
+    ext = _ext(file.filename)
+    if ext not in cfg["EVIDENCE_ALLOWED_EXTENSIONS"] or ext not in _SIGNATURES:
+        raise UploadError("upload.error_type")
+    limit = cfg["MAX_CONTENT_LENGTH"]
+    data = file.stream.read(limit + 1)
+    file.stream.seek(0)
+    if len(data) > limit:
+        raise UploadError("upload.error_size")
+    if not data:
+        raise UploadError("upload.error_empty")
+    if ext == "txt":
+        try:
+            data.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise UploadError("upload.error_type") from exc
+        if b"\x00" in data:
+            raise UploadError("upload.error_type")
+    elif not _sniff_ok(ext, data[:16]):
+        raise UploadError("upload.error_type")
+    return ext, data
+
+
+def safe_original_name(name: str) -> str:
+    return _safe_original_name(name)
+
+
 def _safe_original_name(name: str) -> str:
     name = os.path.basename(name or "file")
     name = re.sub(r"[^\w.\- ()ঀ-৿]", "_", name)[:200]

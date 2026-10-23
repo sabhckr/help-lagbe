@@ -157,12 +157,23 @@ def _register_errors(app: Flask) -> None:
 def _register_context(app: Flask) -> None:
     @app.context_processor
     def inject_globals():
+        from app.helplines import CHECKED_ON, NATIONAL
+
         return {
             "P": P,
+            "national_helplines": NATIONAL,
+            "checked_on": CHECKED_ON,
+            "config": app.config,
             "site_name": app.config.get("SITE_NAME", "Help Lagbe?"),
             "now": datetime.utcnow(),
             "is_staff": bool(getattr(current_user, "is_authenticated", False) and getattr(current_user, "is_staff", False)),
         }
+
+    from app.helplines import CHECKED_ON
+
+    # Globals are visible inside imported macros, unlike context-processor values.
+    app.jinja_env.globals["current_lang"] = get_locale
+    app.jinja_env.globals["checked_on"] = CHECKED_ON
 
     @app.template_filter("dt")
     def format_dt(value, fmt: str = "%d %b %Y, %H:%M"):
@@ -268,5 +279,8 @@ def _register_cli(app: Flask) -> None:
         from app.services.support import expire_abandoned
 
         n = expire_abandoned()
+        from app.services.drafts import purge_expired
+
+        click.echo(f"removed {purge_expired()} expired report drafts")
         due = Case.query.filter(Case.retention_review_at.isnot(None), Case.retention_review_at <= date.today()).count()
         click.echo(f"closed {n} abandoned conversations; {due} cases due for retention review")

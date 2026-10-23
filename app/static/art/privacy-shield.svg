@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t"><title id="t">A shield protecting a person</title>
+<rect width="200" height="200" rx="24" fill="#FBF8F3"/>
+<path d="M100 22l62 22v48c0 44-28 78-62 90-34-12-62-46-62-90V44z" fill="#DCECE7" stroke="#1F4D43" stroke-width="3" stroke-linejoin="round"/>
+<circle cx="100" cy="88" r="18" fill="#E9C7AE"/><path d="M76 132c0-22 10-34 24-34s24 12 24 34z" fill="#713747"/>
+</svg>

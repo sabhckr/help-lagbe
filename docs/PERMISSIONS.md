@@ -97,21 +97,14 @@ Generated from `app/permissions.py` (run `python scripts/gen_permissions_doc.py`
 
 | Category | First department |
 |---|---|
-| `bullying` | support |
-| `eve_teasing` | support |
-| `sexual_harassment` | support |
-| `child_abuse` | support |
-| `domestic_violence` | support |
-| `blackmail` | support |
-| `threats` | support |
-| `exploitation` | support |
-| `bribery` | editorial |
-| `corruption` | editorial |
-| `cyber_harassment` | cyber |
-| `account_takeover` | cyber |
-| `image_abuse` | cyber |
-| `legal_question` | legal |
+| `harassment` | support |
+| `threats_blackmail` | support |
+| `abuse_violence` | support |
+| `corruption_exploitation` | editorial |
+| `online_harm` | cyber |
+| `child_safety` | support |
 | `other` | support |
+| `not_sure` | support |
 
 ## Reason-gated, logged actions
 

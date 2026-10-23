@@ -1,8 +1,0 @@
-{% extends "public/_page.html" %}
-{% from "macros/ui.html" import empty %}
-{% set page_key = 'corrections' %}{% set slug = 'corrections' %}
-{% block after %}
-<p><a class="btn btn-primary" href="{{ url_for('public.new_request', type='correction') }}">{{ t('request.request_correction') }}</a></p>
-<h2>{{ t('corrections.log_title') }}</h2>
-{% if corrections %}<ul class="timeline">{% for c in corrections %}<li class="is-status"><time>{{ c.created_at|d }}</time><strong>{{ t('correction.' ~ c.kind) }}</strong> · <a href="{{ url_for('public.publication', slug=c.publication.slug) }}">{{ c.publication.headline_bn if current_locale == 'bn' and c.publication.headline_bn else c.publication.headline }}</a><p>{{ c.text_bn if current_locale == 'bn' and c.text_bn else c.text }}</p></li>{% endfor %}</ul>{% else %}{{ empty('corrections.none') }}{% endif %}
-{% endblock %}

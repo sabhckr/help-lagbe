@@ -8,7 +8,7 @@ from tests.conftest import login, user_by_role
 def _case():
     from app.models import Case
 
-    return Case.query.filter_by(category="blackmail").one()  # assigned to support + cyber
+    return Case.query.filter_by(category="threats_blackmail").one()  # assigned to support + cyber
 
 
 def _upload(client, ref, name, content, ctype="multipart/form-data"):

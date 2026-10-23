@@ -44,6 +44,15 @@ def decrypt_json(token: bytes | None) -> dict[str, Any]:
         return {"_error": "undecryptable"}
 
 
+def encrypt_bytes(data: bytes) -> bytes:
+    """Encrypt an uploaded file's contents for a draft (Fernet, same key as identity data)."""
+    return _fernet().encrypt(data)
+
+
+def decrypt_bytes(token: bytes) -> bytes:
+    return _fernet().decrypt(token)
+
+
 def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 

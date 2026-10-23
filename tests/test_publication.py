@@ -2,11 +2,11 @@
 
 import pytest
 
-from app.models import Case, Publication, SocialDraft
+from app.models import Publication, SocialDraft
 from app.services import publication as pub_svc
 from app.services.publication import PublicationError
 from app.services.redaction import REDACTION_CHECKLIST, scan_for_identifiers
-from tests.conftest import login, make_case, user_by_role
+from tests.conftest import case_by_text, login, make_case, user_by_role
 
 CLEAN = "Residents of a fictional area report being asked for unofficial payments for a certificate that is free by law. These are reported allegations."
 ALL_OK = {k: True for k in REDACTION_CHECKLIST}
@@ -46,7 +46,7 @@ def test_identifier_scanner(app):
 
 
 def test_full_pipeline_with_two_person_rule_and_gates(app):
-    case = Case.query.filter_by(category="bribery").one()
+    case = case_by_text("speed money")
     editor, editor2, sup, legal = user_by_role("editorial"), None, user_by_role("supervisor"), user_by_role("legal")
     from app.models import User
 
@@ -92,7 +92,7 @@ def test_full_pipeline_with_two_person_rule_and_gates(app):
 
 
 def test_edit_after_gate_resets_signoffs(app):
-    case = Case.query.filter_by(category="bribery").one()
+    case = case_by_text("speed money")
     pub = Publication.query.filter_by(case_id=case.id).one()  # seeded at redaction stage
     pub.redaction_done = True
     pub.editorial_approved = True
@@ -102,7 +102,7 @@ def test_edit_after_gate_resets_signoffs(app):
 
 
 def test_child_safety_cases_never_become_stories(app):
-    case, _ = make_case(category="child_abuse", consent_publication=True)
+    case, _ = make_case(category="child_safety", consent_publication=True)
     pub = _draft(case)
     pub_svc.submit_for_review(pub, user_by_role("editorial"))
     with pytest.raises(PublicationError):
@@ -127,12 +127,12 @@ def test_awareness_material_skips_legal_but_still_needs_two_people(app):
 def test_public_site_only_shows_published_and_not_withdrawn(client):
     published = Publication.query.filter_by(stage="published").first()
     pending = Publication.query.filter_by(stage="redaction").first()
-    assert client.get(f"/p/{published.slug}").status_code == 200
-    assert client.get(f"/p/{pending.slug}").status_code == 404
-    r = client.get("/investigations")
+    assert client.get(f"/stories/{published.slug}").status_code == 200
+    assert client.get(f"/stories/{pending.slug}").status_code == 404
+    r = client.get("/stories")
     assert pending.headline.encode() not in r.data
     pub_svc.withdraw(published, user_by_role("editorial"), "Withdrawn pending a correction request.")
-    assert client.get(f"/p/{published.slug}").status_code == 404
+    assert client.get(f"/stories/{published.slug}").status_code == 404
 
 
 def test_corrections_are_public_and_scanned(client):
@@ -141,9 +141,9 @@ def test_corrections_are_public_and_scanned(client):
     with pytest.raises(PublicationError):
         pub_svc.add_correction(published, editor, "correction", "Reach the editor at editor@example.org for details.")
     pub_svc.add_correction(published, editor, "correction", "The original text misstated the platform name.")
-    r = client.get(f"/p/{published.slug}")
+    r = client.get(f"/stories/{published.slug}")
     assert b"misstated the platform name" in r.data
-    assert b"misstated the platform name" in client.get("/corrections").data
+    assert b"misstated the platform name" in client.get("/stories").data
 
 
 def test_social_drafts_never_auto_post_and_require_url_to_confirm(app):

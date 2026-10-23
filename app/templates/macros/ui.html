@@ -1,3 +1,41 @@
+{# Shared presentation macros. Labels come from translation keys; nothing here invents data. #}
+
+{% macro art(name, alt='', class='') %}
+<img class="{{ class }}" src="{{ url_for('static', filename='art/' ~ name ~ '.svg') }}" alt="{{ t(alt) if alt else '' }}" width="200" height="200" loading="lazy" decoding="async">
+{% endmacro %}
+
+{% macro notice(kind, title=None, text=None) %}
+<div class="notice notice--{{ kind }}" {% if kind == 'safety' %}role="note"{% endif %}>
+  {% if title %}<h2>{{ t(title) }}</h2>{% endif %}
+  {% if text %}<p>{{ t(text) }}</p>{% endif %}
+  {{ caller() if caller else '' }}
+</div>
+{% endmacro %}
+
+{% macro pstatus(state) %}
+<span class="pill pill--{{ {'received': 'received', 'under_review': 'review', 'more_information': 'more', 'referred': 'referred', 'closed': 'closed'}.get(state, 'received') }}">{{ t('pstatus.' ~ state) }}</span>
+{% endmacro %}
+
+{% macro stepper(step, total) %}
+<div class="step-meta"><span>{{ t('report.step_of', n=step|bn_digits, total=total|bn_digits) }}</span></div>
+<ol class="stepper" aria-label="{{ t('report.progress_label') }}">
+  {% for i in range(1, total + 1) %}
+    <li class="{% if i < step %}is-done{% endif %}" {% if i == step %}aria-current="step"{% endif %}><span class="sr-only">{{ t('report.step_word') }} {{ i|bn_digits }}{% if i < step %} ✓{% endif %}</span></li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+{% macro helpline(item) %}
+<article class="helpline">
+  <a class="helpline__number" href="tel:{{ item.number }}" aria-label="{{ t('helpline.call_label', number=item.number) }}">{{ item.number|bn_digits if current_lang() == 'bn' else item.number }}</a>
+  <div>
+    <p class="helpline__name">{{ item.name_bn if current_lang() == 'bn' else item.name_en }}</p>
+    <p class="helpline__for">{{ item.for_bn if current_lang() == 'bn' else item.for_en }}</p>
+    <p class="helpline__source"><a href="{{ item.source }}" rel="noopener noreferrer">{{ t('helpline.source') }}</a> · {{ t('helpline.checked', date=checked_on) }}</p>
+  </div>
+</article>
+{% endmacro %}
+
 {% macro level(n) %}
   {% if n %}<span class="badge badge-level badge-level-{{ n }}">{{ t('severity.short') }} {{ n|bn_digits }} · {{ t('severity.level' ~ n ~ '_short') }}</span>{% else %}<span class="badge badge-muted">{{ t('severity.unassessed') }}</span>{% endif %}
 {% endmacro %}
@@ -6,11 +44,12 @@
 
 {% macro stage(s) %}<span class="badge badge-stage badge-stage-{{ s }}">{{ t('stage.' ~ s) }}</span>{% endmacro %}
 
-{% macro empty(title, text=None, href=None, action=None) %}
-<div class="empty">
-  <p class="empty__title">{{ t(title) }}</p>
+{% macro empty(title, text=None, href=None, action=None, art_name=None) %}
+<div class="empty-state">
+  {% if art_name %}{{ art(art_name) }}{% endif %}
+  <p class="empty-state__title">{{ t(title) }}</p>
   {% if text %}<p class="muted">{{ t(text) }}</p>{% endif %}
-  {% if href and action %}<a class="btn btn-ghost" href="{{ href }}">{{ t(action) }}</a>{% endif %}
+  {% if href and action %}<a class="btn btn-secondary" href="{{ href }}">{{ t(action) }}</a>{% endif %}
 </div>
 {% endmacro %}
 

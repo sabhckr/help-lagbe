@@ -1,0 +1,10 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import stepper %}
+{% block title %}{{ t('step.' ~ step ~ '.title') }} · {{ t('report.heading_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="narrow">
+  {{ stepper(step, total) }}
+  {% include 'report/steps/' ~ step ~ '.html' %}
+</div>
+{% endblock %}

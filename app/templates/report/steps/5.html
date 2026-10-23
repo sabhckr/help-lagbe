@@ -1,0 +1,34 @@
+<h1 class="form-title">{{ t('step.5.question') }}</h1>
+<p class="hint">{{ t('step.5.help') }}</p>
+<div class="notice notice--info"><p>{{ t('step.5.rules', max=file_limit|bn_digits, mb=(config.MAX_CONTENT_LENGTH // 1048576)|bn_digits) }}</p></div>
+{% if files %}
+<h2>{{ t('step.5.added') }}</h2>
+<ul class="file-list">
+  {% for f in files %}
+  <li>
+    <span><span class="file-list__name">{{ f.original_name }}</span><br><span class="file-list__meta">{{ (f.size_bytes // 1024)|bn_digits }} KB</span></span>
+    <form method="post" action="{{ url_for('report.remove_file', file_id=f.id) }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-ghost btn-sm">{{ t('step.5.remove') }}<span class="sr-only"> {{ f.original_name }}</span></button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+<form method="post" enctype="multipart/form-data" novalidate data-upload-progress data-once>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if files|length < file_limit %}
+  <div class="field">
+    <label for="evidence">{{ t('step.5.choose') }}</label>
+    <p class="hint" id="evidence-help">{{ t('step.5.choose_help') }}</p>
+    <input type="file" id="evidence" name="evidence" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.mp3,.m4a,.mp4,.txt" aria-describedby="evidence-help" data-max-bytes="{{ config.MAX_CONTENT_LENGTH }}" data-too-large="{{ t('upload.error_size') }}" data-type-error="{{ t('upload.error_type') }}">
+    <ul class="file-list" id="evidence-picked" aria-live="polite"></ul>
+    <div class="upload-progress" hidden><progress class="progress" id="upload-progress" max="100" value="0">0%</progress><p class="small muted" id="upload-status" role="status"></p></div>
+  </div>
+  {% endif %}
+  <div class="form-actions">
+    <button type="submit" name="action" value="continue" class="btn btn-primary">{{ t('step.5.continue') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('report.step', step=4) }}">{{ t('report.back') }}</a>
+  </div>
+  <p class="small muted">{{ t('step.5.skip_note') }}</p>
+</form>

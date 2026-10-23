@@ -1,50 +1,72 @@
 {% extends "layouts/base.html" %}
-{% from "macros/ui.html" import label_badge %}
+{% from "macros/ui.html" import art, helpline, pstatus %}
+{% block title %}{{ t('home.title_tag') }} · {{ t('site.name') }}{% endblock %}
 {% block content %}
-{% if announcement %}<div class="alert alert-info">{{ announcement }}</div>{% endif %}
-<section class="hero">
-  <p class="eyebrow">{{ t('home.eyebrow') }}</p>
-  <h1>{{ t('home.title') }}</h1>
-  <p class="lead">{{ t('home.lead') }}</p>
-  <p class="identity-line">{{ t('site.identity') }} · <span lang="bn">{{ t('site.principle') }}</span></p>
-  <div class="cluster mt-5">
-    <a class="btn btn-primary" href="{{ url_for('report.new') }}">{{ t('home.cta_report') }}</a>
-    <a class="btn btn-ghost" href="{{ url_for('public.page', slug='get-help') }}">{{ t('home.cta_help') }}</a>
-    <a class="btn btn-ghost" href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a>
+{% if announcement %}<div class="notice notice--info" role="status">{{ announcement }}</div>{% endif %}
+
+<section class="hero" aria-labelledby="home-title">
+  <div>
+    <p class="eyebrow">{{ t('home.eyebrow') }}</p>
+    <h1 id="home-title">{{ t('home.heading') }}</h1>
+    <p class="lead">{{ t('home.lead') }}</p>
+    <p class="identity-line">{{ t('site.identity') }}</p>
   </div>
+  <div class="hero__art">{{ art('support-hands') }}</div>
 </section>
 
-<section class="grid grid-3" aria-label="{{ t('home.pillars') }}">
-  <a class="card card--accent link-plain" href="{{ url_for('public.page', slug='get-help') }}"><h2 class="mt-0">{{ t('home.pillar_help') }}</h2><p class="muted">{{ t('home.pillar_help_text') }}</p></a>
-  <a class="card card--accent link-plain" href="{{ url_for('public.page', slug='report-wrongdoing') }}"><h2 class="mt-0">{{ t('home.pillar_report') }}</h2><p class="muted">{{ t('home.pillar_report_text') }}</p></a>
-  <a class="card card--accent link-plain" href="{{ url_for('public.page', slug='awareness') }}"><h2 class="mt-0">{{ t('home.pillar_awareness') }}</h2><p class="muted">{{ t('home.pillar_awareness_text') }}</p></a>
-  <a class="card card--accent link-plain" href="{{ url_for('public.page', slug='investigations') }}"><h2 class="mt-0">{{ t('home.pillar_accountability') }}</h2><p class="muted">{{ t('home.pillar_accountability_text') }}</p></a>
+<section aria-labelledby="actions-title">
+  <h2 id="actions-title" class="sr-only">{{ t('home.actions_title') }}</h2>
+  <div class="actions">
+    <a class="action" href="{{ url_for('public.help_page') }}#now">
+      {{ art('support-hands', class='action__icon') }}
+      <span class="action__title">{{ t('home.action_help') }}</span>
+      <span class="action__text">{{ t('home.action_help_text') }}</span>
+      <span class="action__cta">{{ t('home.action_help_cta') }} →</span>
+    </a>
+    <a class="action" href="{{ url_for('report.new') }}">
+      {{ art('private-report', class='action__icon') }}
+      <span class="action__title">{{ t('home.action_report') }}</span>
+      <span class="action__text">{{ t('home.action_report_text') }}</span>
+      <span class="action__cta">{{ t('home.action_report_cta') }} →</span>
+    </a>
+    <a class="action" href="{{ url_for('public.help_page') }}#talk">
+      {{ art('agent-support', class='action__icon') }}
+      <span class="action__title">{{ t('home.action_talk') }}</span>
+      <span class="action__text">{{ t('home.action_talk_text') }}</span>
+      <span class="action__cta">{{ t('home.action_talk_cta') }} →</span>
+    </a>
+  </div>
+  <p class="lead">{{ t('home.tell_us') }}</p>
 </section>
 
-<section class="grid grid-2 mt-6 items-start">
+<section class="notice notice--safety mt-5" aria-labelledby="danger-title">
+  <h2 id="danger-title">{{ t('home.danger_title') }}</h2>
+  <p>{{ t('home.danger_text') }}</p>
+  <div class="helplines">{% for n in national_helplines %}{{ helpline(n) }}{% endfor %}</div>
+  <p class="small mt-2">{{ t('home.danger_note') }}</p>
+</section>
+
+<section class="mt-5" aria-labelledby="support-title">
+  <h2 id="support-title">{{ t('home.support_title') }}</h2>
   <div class="card">
-    <h2 class="mt-0">{{ t('nav.live_support') }}</h2>
-    <p><span class="availability {{ 'is-open' if availability.open else 'is-closed' }}" data-availability="{{ url_for('support.status') }}">{{ t('support.open') if availability.open else t('support.closed_now') }}</span></p>
-    <p class="small muted">{% if availability.open %}{{ t('support.agents_online', n=availability.agents_online|bn_digits) }}{% else %}{{ t('support.closed_explain') }}{% endif %}{% set hours = availability.hours_bn if current_locale == 'bn' and availability.hours_bn else availability.hours_en %}{% if hours %}<br>{{ t('support.hours') }}: {{ hours }}{% endif %}</p>
-    <a class="btn btn-ghost btn-sm" href="{{ url_for('public.page', slug='live-support') }}">{{ t('home.support_link') }}</a>
+    <p class="status-dot {{ 'is-open' if availability.open else 'is-closed' }}">{{ t('support.open_now') if availability.open else t('support.closed_now') }}</p>
+    <p>{{ t('home.support_open_text') if availability.open else t('home.support_closed_text') }}</p>
+    <a class="btn btn-secondary" href="{{ url_for('public.help_page') }}#talk">{{ t('home.support_link') }}</a>
   </div>
-  {% include 'public/_contacts.html' %}
 </section>
 
-<section class="mt-7">
-  <h2>{{ t('home.how_title') }}</h2>
-  <ol class="steps">
-    <li>{{ t('home.how1') }}</li>
-    <li>{{ t('home.how2') }}</li>
-    <li>{{ t('home.how3') }}</li>
-    <li>{{ t('home.how4') }}</li>
-  </ol>
+{% if latest %}
+<section class="mt-5" aria-labelledby="latest-title">
+  <div class="page-head"><h2 id="latest-title" class="mt-0">{{ t('home.latest_title') }}</h2><a href="{{ url_for('public.stories') }}">{{ t('home.all_stories') }}</a></div>
+  <div class="grid grid-3">
+    {% for p in latest %}
+    <a class="card card-link" href="{{ url_for('public.story', slug=p.slug) }}">
+      <span class="badge badge-label badge-label-{{ p.label }}">{{ t('pub_label.' ~ p.label) }}</span>
+      <span class="card-link__cta">{{ p.headline_bn if current_locale == 'bn' and p.headline_bn else p.headline }}</span>
+      <span class="small muted">{{ p.published_at|d }}</span>
+    </a>
+    {% endfor %}
+  </div>
 </section>
-
-<section class="mt-7">
-  <div class="page-head"><h2 class="m-0">{{ t('home.latest') }}</h2><a class="small" href="{{ url_for('public.page', slug='awareness') }}">{{ t('home.all_published') }}</a></div>
-  {% if latest %}
-  <div class="grid grid-3">{% for p in latest %}<a class="card link-plain" href="{{ url_for('public.publication', slug=p.slug) }}">{{ label_badge(p.label) }}<h3 class="mt-1">{{ p.headline_bn if current_locale == 'bn' and p.headline_bn else p.headline }}</h3><p class="small muted">{{ p.published_at|d }}</p></a>{% endfor %}</div>
-  {% else %}<p class="muted">{{ t('home.nothing_published') }}</p>{% endif %}
-</section>
+{% endif %}
 {% endblock %}

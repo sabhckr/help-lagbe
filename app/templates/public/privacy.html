@@ -1,2 +1,43 @@
-{% extends "public/_page.html" %}
-{% set page_key = 'privacy' %}{% set slug = 'privacy' %}
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('privacy.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<article class="narrow">
+  <h1>{{ t('privacy.heading') }}</h1>
+  <p class="lead">{{ t('privacy.lead') }}</p>
+  <div class="notice notice--warn"><p>{{ t('privacy.review_notice') }}</p></div>
+
+  <h2 id="anonymous">{{ t('privacy.anon_title') }}</h2>
+  <p>{{ t('privacy.anon_text') }}</p>
+  <h2 id="confidential">{{ t('privacy.conf_title') }}</h2>
+  <p>{{ t('privacy.conf_text') }}</p>
+  <ul class="stack-sm">
+    <li>{{ t('privacy.conf1') }}</li>
+    <li>{{ t('privacy.conf2') }}</li>
+    <li>{{ t('privacy.conf3') }}</li>
+  </ul>
+
+  <h2>{{ t('privacy.who_title') }}</h2>
+  <p>{{ t('privacy.who_text') }}</p>
+
+  <h2>{{ t('privacy.keep_title') }}</h2>
+  <ul class="stack-sm">
+    <li>{{ t('privacy.keep1') }}</li>
+    <li>{{ t('privacy.keep2') }}</li>
+    <li>{{ t('privacy.keep3') }}</li>
+  </ul>
+
+  <h2>{{ t('privacy.files_title') }}</h2>
+  <p>{{ t('privacy.files_text') }}</p>
+
+  <h2>{{ t('privacy.never_title') }}</h2>
+  <ul class="stack-sm">
+    <li>{{ t('privacy.never1') }}</li>
+    <li>{{ t('privacy.never2') }}</li>
+    <li>{{ t('privacy.never3') }}</li>
+  </ul>
+
+  <h2>{{ t('privacy.rights_title') }}</h2>
+  <p>{{ t('privacy.rights_text') }}</p>
+  <p><a class="btn btn-secondary" href="{{ url_for('public.new_request', type='complaint') }}">{{ t('privacy.ask_button') }}</a></p>
+</article>
+{% endblock %}

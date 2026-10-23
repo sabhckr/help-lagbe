@@ -1,5 +1,7 @@
 # Help Lagbe? — delivery report (22 October 2026)
 
+> **Update, 23 October 2026:** the public site, report flow, categories and public statuses were redesigned. See [REDESIGN-AUDIT.md](REDESIGN-AUDIT.md) for what changed and the current test results. Sections 1–9 below describe the 22 October build.
+
 Status: **a working, tested prototype of the new architecture. Not ready for public launch.** Launch needs the reviews, staffing and external services listed in section 8. Nothing here is a claim of legal compliance or production readiness.
 
 ## 1. The original repository

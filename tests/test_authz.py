@@ -3,11 +3,11 @@
 from app.models import AuditEvent, Case
 from app.services import cases as svc
 from app.services import identity as identity_svc
-from tests.conftest import login, make_case, user_by_role
+from tests.conftest import case_by_text, login, make_case, user_by_role
 
 
 def _dv_case() -> Case:
-    return Case.query.filter_by(category="domestic_violence").one()
+    return Case.query.filter_by(category="abuse_violence").one()
 
 
 def test_reporter_cannot_reach_workspace(client):
@@ -30,10 +30,10 @@ def test_anonymous_is_redirected_to_login(client):
 
 def test_support_agent_cannot_open_other_departments_case(client):
     login(client, "support")
-    cyber_case = Case.query.filter_by(category="account_takeover").one()  # routed to cyber, assigned to cyber only
+    cyber_case = Case.query.filter_by(category="online_harm").one()  # routed to cyber, assigned to cyber only
     assert client.get(f"/workspace/cases/{cyber_case.reference}").status_code == 403
     # but can open a case in their own department
-    own = Case.query.filter_by(category="eve_teasing").one()
+    own = Case.query.filter_by(category="harassment").one()
     r = client.get(f"/workspace/cases/{own.reference}")
     assert r.status_code == 200 and own.title.encode() in r.data
 
@@ -41,8 +41,8 @@ def test_support_agent_cannot_open_other_departments_case(client):
 def test_queue_only_lists_visible_cases(client):
     login(client, "cyber")
     r = client.get("/workspace/cases?scope=all")
-    assert Case.query.filter_by(category="account_takeover").one().reference.encode() in r.data
-    assert Case.query.filter_by(category="eve_teasing").one().reference.encode() not in r.data
+    assert Case.query.filter_by(category="online_harm").one().reference.encode() in r.data
+    assert Case.query.filter_by(category="harassment").one().reference.encode() not in r.data
 
 
 def test_admin_sees_metadata_but_not_narrative(client):
@@ -103,7 +103,7 @@ def test_identity_unlock_requires_assignment_reason_and_logs(client):
 
 
 def test_editorial_cannot_unlock_identity(client):
-    case = Case.query.filter_by(category="bribery").one()  # editorial case
+    case = case_by_text("speed money")  # editorial case
     from app.models import ReporterIdentity
 
     identity = ReporterIdentity(case_id=case.id)

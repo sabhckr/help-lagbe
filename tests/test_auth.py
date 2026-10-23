@@ -141,3 +141,13 @@ def test_change_password_requires_current(client):
     )
     assert r.status_code == 302
     assert user_by_role("reporter").check_password("new-long-password-9")
+
+
+def test_signed_in_people_can_sign_out_from_any_page(client):
+    login(client, "support")
+    assert b'action="/auth/logout"' in client.get("/workspace/").data
+    assert b'action="/auth/logout"' in client.get("/").data
+    client.post("/auth/logout")
+    login(client, "reporter")
+    page = client.get("/").data
+    assert b'href="/my-reports"' in page and b'action="/auth/logout"' in page

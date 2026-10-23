@@ -1,39 +1,42 @@
 {% extends "layouts/base.html" %}
+{% from "macros/ui.html" import pstatus %}
 {% from "macros/forms.html" import field, submit %}
-{% from "macros/ui.html" import status %}
-{% block title %}{{ case.reference }} · {{ t('track.page_title') }}{% endblock %}
+{% block title %}{{ case.reference }} · {{ t('track.title_tag') }}{% endblock %}
 {% block robots %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
 <div class="narrow">
   <p class="eyebrow">{{ t('track.your_case') }}</p>
   <h1 class="mono">{{ case.reference }}</h1>
-  <div class="cluster">{{ status(case.status) }}<span class="badge badge-muted">{{ t('category.' ~ case.category) }}</span><span class="badge badge-muted">{{ t('report.type_' ~ case.submission_type) }}</span></div>
-  <p class="muted small">{{ t('track.submitted_on') }} {{ case.created_at|dt }}</p>
-  <div class="card card--blue">
-    <h2>{{ t('track.status_explained_title') }}</h2>
-    <p>{{ t('status_help.' ~ case.status) }}</p>
-    <p class="small muted">{{ t('track.severity_note') }}</p>
-  </div>
+  <p>{{ pstatus(state) }}</p>
+  <p class="small muted">{{ t('track.submitted_on') }}: {{ case.created_at|dt }}</p>
+
+  <section class="card card--teal mt-3" aria-labelledby="state-title">
+    <h2 id="state-title" class="mt-0">{{ t('pstatus.' ~ state) }}</h2>
+    <p>{{ t('pstatus_help.' ~ state) }}</p>
+    {% if referred and state != 'referred' %}<p class="small">{{ t('track.referred_note') }}</p>{% endif %}
+    <p class="small">{{ t('track.not_proven') }}</p>
+  </section>
+
+  <h2>{{ t('track.next_title') }}</h2>
+  <p>{{ t('track.next_' ~ state) }}</p>
 
   <h2>{{ t('track.timeline') }}</h2>
+  {% if timeline %}
   <ul class="timeline">
-    {% for u in timeline|reverse %}
-      <li class="{% if u.kind == 'status' %}is-status{% elif u.kind == 'reporter_message' %}is-reporter{% endif %}">
-        <time datetime="{{ u.created_at.isoformat() }}">{{ u.created_at|dt }}</time>
-        {% if u.kind == 'status' %}<strong>{{ t(u.body) if u.body.startswith('status.') else t(u.body) }}</strong>
-        {% elif u.kind == 'reporter_message' %}<strong>{{ t('track.you_wrote') }}</strong><p>{{ u.body }}</p>
-        {% else %}<strong>{{ t('track.team_wrote') }}</strong><p>{{ u.body }}</p>{% endif %}
-      </li>
+    {% for e in timeline %}
+    <li class="{% if e.kind == 'state' %}is-state{% elif e.kind == 'reporter' %}is-reporter{% endif %}">
+      <time datetime="{{ e.at.isoformat() }}">{{ e.at|dt }}</time>
+      {% if e.kind == 'state' %}<strong>{{ t('pstatus.' ~ e.state) }}</strong>
+      {% elif e.kind == 'reporter' %}<strong>{{ t('track.you_wrote') }}</strong><p>{{ e.text }}</p>
+      {% else %}<strong>{{ t('track.team_wrote') }}</strong><p>{{ t(e.text) if e.text.startswith('track.') else e.text }}</p>{% endif %}
+    </li>
     {% endfor %}
   </ul>
-
-  {% if referrals %}
-  <h2>{{ t('track.referrals') }}</h2>
-  <ul>{% for r in referrals %}<li>{{ t('referral_type.' ~ r.referral_type) }} — {{ r.organisation }} · {{ t('referral_status.' ~ r.status) }}</li>{% endfor %}</ul>
   {% endif %}
+
   {% if outcomes %}
   <h2>{{ t('track.outcomes') }}</h2>
-  <ul>{% for o in outcomes %}<li><strong>{{ t('outcome_type.' ~ o.outcome_type) }}</strong> · {{ t('finding.' ~ o.finding_status) }}{% if o.verified %} · <span class="badge badge-ok">{{ t('outcome.verified_badge') }}</span>{% endif %}<br>{{ o.description }}</li>{% endfor %}</ul>
+  <ul class="stack-sm">{% for o in outcomes %}<li>{{ t('outcome_type.' ~ o.outcome_type) }} · {{ t('outcome.verified_badge') }}</li>{% endfor %}</ul>
   {% endif %}
 
   <h2>{{ t('track.write_to_team') }}</h2>
@@ -43,7 +46,7 @@
     {{ field(form.body, rows=4, maxlength=4000) }}
     <div class="form-actions">{{ submit('track.send_button') }}</div>
   </form>
-  <div class="cluster mt-6">
+  <div class="cluster mt-5">
     <form method="post" action="{{ url_for('track.forget', reference=case.reference) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm">{{ t('track.forget_device') }}</button></form>
     <span class="small muted">{{ t('track.forget_help') }}</span>
   </div>

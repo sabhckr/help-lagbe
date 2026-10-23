@@ -82,7 +82,7 @@ class BaseConfig:
     DATA_RETENTION_DAYS_CLOSED_CASES = _env_int("DATA_RETENTION_DAYS_CLOSED_CASES", 365)
 
     LANGUAGES = ("en", "bn")
-    DEFAULT_LANGUAGE = "en"
+    DEFAULT_LANGUAGE = "bn"  # Bangla first; English is a full second language
     SITE_NAME = "Help Lagbe?"
     PREFERRED_URL_SCHEME = "http"
 
@@ -118,6 +118,7 @@ class TestingConfig(BaseConfig):
     BCRYPT_LOG_ROUNDS = 4  # fast hashing in tests only; production uses the library default (12)
     MFA_REQUIRED_FOR_STAFF = True
     SEED_DEMO_DATA = False
+    DEFAULT_LANGUAGE = "en"  # tests read English strings
     EVIDENCE_DIR = ""  # set per test to a temporary directory
     SERVER_NAME = "localhost.test"
     PREFERRED_URL_SCHEME = "http"

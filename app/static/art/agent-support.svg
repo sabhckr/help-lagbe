@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t"><title id="t">A trained support worker with a headset</title>
+<rect width="200" height="200" rx="24" fill="#FBF8F3"/>
+<path d="M56 96c0-34 18-54 44-54s44 20 44 54" fill="none" stroke="#1F4D43" stroke-width="6" stroke-linecap="round"/>
+<rect x="46" y="92" width="16" height="30" rx="8" fill="#1F4D43"/><rect x="138" y="92" width="16" height="30" rx="8" fill="#1F4D43"/>
+<path d="M134 124c0 18-14 22-32 22" fill="none" stroke="#1F4D43" stroke-width="4" stroke-linecap="round"/>
+<circle cx="100" cy="88" r="28" fill="#E9C7AE"/><path d="M72 84c0-22 12-34 28-34s28 12 28 34c-6-8-16-12-28-12s-22 4-28 12z" fill="#3E3538"/>
+<path d="M58 180c0-40 18-62 42-64 24 2 42 24 42 64z" fill="#713747"/>
+<path d="M86 116l14 14 14-14" fill="none" stroke="#F5E2DC" stroke-width="4" stroke-linejoin="round"/>
+</svg>

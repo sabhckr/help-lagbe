@@ -56,7 +56,7 @@ def login(client, role: str, *, enrol: bool = True):
 
 
 BASE_REPORT = {
-    "category": "blackmail",
+    "category": "threats_blackmail",
     "title": "Someone is threatening to share my photos",
     "narrative": "A person I met online says they will send private pictures to my family unless I pay them money every week.",
     "immediate_danger": "unsure",
@@ -69,3 +69,37 @@ def make_case(**overrides) -> tuple[Case, str]:
     data = {**BASE_REPORT, **overrides}
     data["consent_process"] = bool(data.get("consent_process"))
     return case_service.create_case(data)
+
+
+ANSWERS = {
+    1: {"category": "threats_blackmail"},
+    2: {"immediate_danger": "unsure"},
+    3: {"narrative": "Someone keeps messaging me and says they will share my photos unless I pay.", "approximate_time": "Last week"},
+    4: {"submission_type": "anonymous"},
+    6: {"consent_process": "y"},
+}
+
+
+def walk_report(client, overrides: dict | None = None, *, submit: bool = True):
+    """Go through the six reporting steps exactly as a browser would. Returns the final response."""
+    overrides = overrides or {}
+    response = None
+    for step in (1, 2, 3, 4):
+        data = {**ANSWERS[step], **overrides.get(step, {})}
+        response = client.post(f"/report/{step}", data=data)
+        assert response.status_code == 302, (step, response.status_code, response.data[:300])
+    response = client.post("/report/5", data={"action": "continue"})
+    assert response.status_code == 302
+    if submit:
+        response = client.post("/report/6", data={**ANSWERS[6], **overrides.get(6, {})})
+    return response
+
+
+def case_by_text(fragment: str) -> Case:
+    """Seeded cases share categories, so tests pick them by a phrase in the narrative."""
+    return Case.query.filter(Case.narrative.contains(fragment)).one()
+
+
+def use_lang(client, lang: str) -> None:
+    """Set the language cookie on the test server's domain (SERVER_NAME is localhost.test)."""
+    client.set_cookie("hl_lang", lang, domain="localhost.test")

@@ -1,0 +1,32 @@
+"""National helplines shown on the site. These are public numbers, not organisations verified by staff.
+
+Each entry names its source and the date it was checked. A number is added only after a source
+confirms it. 1098 (child helpline) is deliberately absent until an official source confirms it.
+"""
+
+from __future__ import annotations
+
+CHECKED_ON = "23 Oct 2026"
+
+NATIONAL = (
+    {
+        "number": "999",
+        "name_en": "National emergency service",
+        "name_bn": "জাতীয় জরুরি সেবা",
+        "for_en": "Police, fire and ambulance. For immediate danger.",
+        "for_bn": "পুলিশ, ফায়ার সার্ভিস ও অ্যাম্বুলেন্স। তাৎক্ষণিক বিপদের জন্য।",
+        "source": "https://www.thedailystar.net/toggle/news/helpline-numbers-location-sharing-apps-and-services-you-may-need-emergency-1978905",
+    },
+    {
+        "number": "109",
+        "name_en": "Violence against women and children helpline",
+        "name_bn": "নারী ও শিশু নির্যাতন প্রতিরোধ হেল্পলাইন",
+        "for_en": "Harassment or abuse on the street or at home.",
+        "for_bn": "রাস্তায় বা ঘরে হয়রানি বা নির্যাতনের ক্ষেত্রে।",
+        "source": "https://findahelpline.com/organizations/national-helpline-109",
+    },
+)
+
+
+def national_for_display() -> tuple[dict, ...]:
+    return NATIONAL

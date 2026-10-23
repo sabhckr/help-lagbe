@@ -2,7 +2,7 @@
   "site": {
     "name": "Help Lagbe?",
     "identity": "Human to Human. People for People.",
-    "principle": "মানুষের পাশে মানুষ।",
+    "principle": "মানুষ মানুষের পাশে।",
     "secular": "A secular service. No religious preference, no religious test, no discrimination. Human dignity regardless of belief, gender, class, disability or background.",
     "no_dispatch": "Help Lagbe? does not dispatch police, ambulances or rescue services. In immediate danger, contact the emergency numbers shown if it is safe to do so."
   },
@@ -15,9 +15,9 @@
     "menu": "Menu",
     "more": "More",
     "policies": "Policies",
-    "get_help": "Get Help",
-    "report": "Report Wrongdoing",
-    "track": "Track My Case",
+    "get_help": "Get help",
+    "report": "Report",
+    "track": "My case",
     "awareness": "Public Awareness",
     "investigations": "Investigations & Accountability",
     "live_support": "Live Human Support",
@@ -140,93 +140,6 @@
     "password_changed": "Your password has been changed.",
     "temporary_password": "Temporary password"
   },
-  "home": {
-    "eyebrow": "A secular, human-centred public-interest service in Bangladesh",
-    "title": "When something is wrong, there are people who will listen.",
-    "lead": "Confidential support from real people, safe reporting of wrongdoing, responsibly reviewed public-interest stories, and documented accountability.",
-    "cta_report": "Report wrongdoing",
-    "cta_help": "Get help",
-    "pillars": "What we do",
-    "pillar_help": "Get Help",
-    "pillar_help_text": "Confidential support from trained human agents, and referrals you choose.",
-    "pillar_report": "Report Wrongdoing",
-    "pillar_report_text": "Bullying, eve-teasing, bribery, harassment, abuse, blackmail, threats and exploitation. Anonymously or confidentially.",
-    "pillar_awareness": "Raise Awareness",
-    "pillar_awareness_text": "Reviewed stories, investigations, educational material and campaigns.",
-    "pillar_accountability": "Pursue Accountability",
-    "pillar_accountability_text": "Documented referrals, verified actions, legal pathways, corrections and transparent outcomes.",
-    "support_link": "About live support",
-    "how_title": "How a report is handled",
-    "how1": "You describe what happened. You choose anonymous or confidential. You get a reference and a one-time key to track the case.",
-    "how2": "A trained person reviews it, assigns a severity level with written reasoning, and routes it to the right team.",
-    "how3": "The team acts: support, referrals you agree to, legal information, digital-safety help, or a documented complaint. Every sensitive access is logged.",
-    "how4": "Outcomes are recorded truthfully. Nothing is published without consent, review, redaction and approval.",
-    "latest": "Latest published",
-    "all_published": "All published material",
-    "nothing_published": "Nothing has been published yet. Everything we publish goes through consent, review, redaction and approval first."
-  },
-  "page": {
-    "get_help": {
-      "title": "Get Help",
-      "eyebrow": "Human to Human"
-    },
-    "report_wrongdoing": {
-      "title": "Report Wrongdoing",
-      "eyebrow": "Safe reporting"
-    },
-    "legal_help": {
-      "title": "Legal Help",
-      "eyebrow": "Information and referral pathways"
-    },
-    "digital_safety": {
-      "title": "Digital Safety",
-      "eyebrow": "Protect yourself online"
-    },
-    "live_support": {
-      "title": "Live Human Support",
-      "eyebrow": "Real people, when available"
-    },
-    "about": {
-      "title": "About Help Lagbe?",
-      "eyebrow": "People for People"
-    },
-    "safeguarding": {
-      "title": "Safeguarding",
-      "eyebrow": "How we protect people"
-    },
-    "privacy": {
-      "title": "Privacy",
-      "eyebrow": "What we collect, and why"
-    },
-    "editorial_policy": {
-      "title": "Editorial Policy",
-      "eyebrow": "How we publish"
-    },
-    "corrections": {
-      "title": "Corrections",
-      "eyebrow": "When we get it wrong"
-    },
-    "complaints": {
-      "title": "Complaints",
-      "eyebrow": "About this service"
-    },
-    "accessibility": {
-      "title": "Accessibility",
-      "eyebrow": "For everyone"
-    },
-    "contact": {
-      "title": "Contact",
-      "eyebrow": "How to reach us"
-    },
-    "awareness": {
-      "title": "Public Awareness",
-      "eyebrow": "Raise Awareness"
-    },
-    "investigations": {
-      "title": "Investigations & Accountability",
-      "eyebrow": "Pursue Accountability"
-    }
-  },
   "contacts": {
     "public_title": "If you are in immediate danger",
     "public_help": "These external services are not run by Help Lagbe?. A number is listed only after a named staff member has verified it.",
@@ -313,7 +226,6 @@
   },
   "track": {
     "page_title": "Track My Case",
-    "lead": "Enter the reference and the one-time key you were shown when you submitted. No account, no name, no phone number.",
     "reference": "Case reference",
     "reference_placeholder": "HL-XXXX-XXXX",
     "reference_help": "Starts with HL-.",
@@ -432,8 +344,7 @@
     "next3": "Any referral or publication needs your consent. Every sensitive access is logged.",
     "saved_button": "I have saved my reference and key",
     "saved_note": "This removes them from this screen so they are not visible to anyone else using this device.",
-    "error_consent_required": "Consent is required to submit a report.",
-    "error_category": "Choose a category."
+    "error_consent_required": "Consent is required to submit a report."
   },
   "report_type": {
     "anonymous": "Anonymous",
@@ -453,8 +364,7 @@
     "cyber_harassment": "Online harassment",
     "account_takeover": "Hacked or stolen account",
     "image_abuse": "Private images shared or threatened",
-    "legal_question": "I need legal information",
-    "other": "Something else"
+    "legal_question": "I need legal information"
   },
   "contact": {
     "none": "Do not contact me",
@@ -470,7 +380,6 @@
   },
   "support": {
     "open": "An agent is available",
-    "closed_now": "No agent is available right now",
     "closed_explain": "Live chat only opens when a trained human agent has set themselves available during staffed hours. We never show a chat as open when nobody is there.",
     "service_not_staffed": "Live support is not currently staffed.",
     "service_disabled": "Service marked as not staffed by an administrator",
@@ -558,13 +467,6 @@
     "waiting": "Waiting",
     "active": "Active",
     "closed": "Closed"
-  },
-  "contact_page": {
-    "channels_title": "Our channels",
-    "channel_report": "the safest way to tell us about something.",
-    "channel_track": "see progress and write to the case team.",
-    "channel_support": "talk to a trained person when an agent is online.",
-    "channel_request": "Request a correction, reply, appeal, removal, or make a complaint"
   },
   "awareness": {
     "list_title": "Published material",

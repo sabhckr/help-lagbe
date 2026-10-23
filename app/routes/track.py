@@ -1,4 +1,4 @@
-"""Track My Case: reference + one-time secret, no account needed, no identity shown."""
+"""Track My Case: reference and one-time key, no account. Shows public states only, never investigation notes."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from app.models.base import utcnow
 from app.models.case import Case
 from app.services import audit
 from app.services.cases import CaseError, add_reporter_message
+from app.services.status import PUBLIC_RECEIVED, public_state, public_state_for_internal
 
 track_bp = Blueprint("track", __name__)
 
@@ -26,17 +27,28 @@ def normalise_reference(raw: str) -> str:
     return cleaned
 
 
-def _unlocked(reference: str) -> bool:
-    return reference in (session.get("tracked_cases") or {})
-
-
 def _require(reference: str) -> Case:
-    if not _unlocked(reference):
+    if reference not in (session.get("tracked_cases") or {}):
         abort(403)
     case = Case.query.filter_by(reference=reference).first()
     if case is None:
         abort(404)
     return case
+
+
+def _timeline(case: Case) -> list[dict]:
+    """Public timeline: state changes and messages only. Internal notes and routing are never included."""
+    entries = []
+    for update in case.updates:
+        if update.kind == "status":
+            key = update.body or ""
+            state = PUBLIC_RECEIVED if key == "track.update_received" else public_state_for_internal(key.removeprefix("status."))
+            entries.append({"at": update.created_at, "kind": "state", "state": state})
+        elif update.kind == "reporter_message":
+            entries.append({"at": update.created_at, "kind": "reporter", "text": update.body})
+        else:
+            entries.append({"at": update.created_at, "kind": "team", "text": update.body})
+    return list(reversed(entries))
 
 
 @track_bp.route("/", methods=["GET", "POST"])
@@ -62,11 +74,17 @@ def index():
 @track_bp.route("/<reference>")
 def view(reference: str):
     case = _require(reference)
-    form = ReporterMessageForm()
-    timeline = [u for u in case.updates]
-    referrals = [r for r in case.referrals]
-    outcomes = [o for o in case.outcomes]
-    return render_template("track/view.html", case=case, form=form, timeline=timeline, referrals=referrals, outcomes=outcomes)
+    state = public_state(case)
+    outcomes = [o for o in case.outcomes if o.verified]
+    return render_template(
+        "track/view.html",
+        case=case,
+        state=state,
+        form=ReporterMessageForm(),
+        timeline=_timeline(case),
+        referred=any(r.status in ("accepted", "submitted", "confirmed") for r in case.referrals),
+        outcomes=outcomes,
+    )
 
 
 @track_bp.route("/<reference>/message", methods=["POST"])

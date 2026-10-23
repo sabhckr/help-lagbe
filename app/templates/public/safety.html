@@ -1,0 +1,41 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import art %}
+{% block title %}{{ t('safety.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<header class="narrow">
+  <h1>{{ t('safety.heading') }}</h1>
+  <p class="lead">{{ t('safety.lead') }}</p>
+</header>
+
+<section id="now" class="mt-5" aria-labelledby="now-title">
+  <h2 id="now-title">{{ t('safety.now_title') }}</h2>
+  <ul class="stack-sm">
+    <li>{{ t('safety.now1') }}</li>
+    <li>{{ t('safety.now2') }}</li>
+    <li>{{ t('safety.now3') }}</li>
+  </ul>
+  <p><a class="btn btn-secondary" href="{{ url_for('public.help_page') }}#now">{{ t('safety.now_link') }}</a></p>
+</section>
+
+<section id="digital" class="mt-5" aria-labelledby="digital-title">
+  <h2 id="digital-title">{{ t('safety.digital_title') }}</h2>
+  <ul class="stack-sm">
+    <li>{{ t('safety.digital1') }}</li>
+    <li>{{ t('safety.digital2') }}</li>
+    <li>{{ t('safety.digital3') }}</li>
+    <li>{{ t('safety.digital4') }}</li>
+    <li>{{ t('safety.digital5') }}</li>
+  </ul>
+</section>
+
+<section id="blackmail" class="mt-5" aria-labelledby="blackmail-title">
+  <h2 id="blackmail-title">{{ t('safety.blackmail_title') }}</h2>
+  <p>{{ t('safety.blackmail_text') }}</p>
+</section>
+
+<section id="legal" class="mt-5" aria-labelledby="legal-title">
+  <h2 id="legal-title">{{ t('safety.legal_title') }}</h2>
+  <div class="notice notice--info"><p>{{ t('safety.legal_disclaimer') }}</p></div>
+  <p>{{ t('safety.legal_text') }}</p>
+</section>
+{% endblock %}

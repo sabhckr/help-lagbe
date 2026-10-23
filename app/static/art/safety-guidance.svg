@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="t"><title id="t">Signposts pointing to a safe path</title>
+<rect width="200" height="200" rx="24" fill="#FBF8F3"/>
+<rect x="96" y="34" width="8" height="136" rx="4" fill="#7F756D"/>
+<path d="M40 56h92l18 14-18 14H40z" fill="#713747"/>
+<path d="M160 104H68l-18 14 18 14h92z" fill="#1F4D43"/>
+<path d="M60 170h80" stroke="#CFC5BD" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -51,7 +51,7 @@ def _unique_reference() -> str:
     raise RuntimeError("could not allocate a unique case reference")
 
 
-def create_case(data: dict[str, Any], *, reporter_user=None, language: str = "en") -> tuple[Case, str]:
+def create_case(data: dict[str, Any], *, reporter_user=None, language: str = "en", commit: bool = True) -> tuple[Case, str]:
     """Create a case from validated form data. Returns (case, tracking_secret).
     The tracking secret is shown to the reporter exactly once and stored only as a hash."""
     submission_type = SUBMISSION_CONFIDENTIAL if data.get("submission_type") == SUBMISSION_CONFIDENTIAL else SUBMISSION_ANONYMOUS
@@ -84,7 +84,7 @@ def create_case(data: dict[str, Any], *, reporter_user=None, language: str = "en
         immediate_danger=immediate_danger,
         child_involved=child_involved,
         safety_flag=(immediate_danger == DANGER_YES),
-        child_safety_flag=child_involved or category == "child_abuse",
+        child_safety_flag=child_involved or category == "child_safety",
         consent_process=True,
         consent_publication=bool(data.get("consent_publication")),
         consent_contact=bool(data.get("consent_contact")) and submission_type == SUBMISSION_CONFIDENTIAL,
@@ -122,7 +122,8 @@ def create_case(data: dict[str, Any], *, reporter_user=None, language: str = "en
         case_id=case.id,
         details={"category": category, "type": submission_type, "safety_flag": case.safety_flag},
     )
-    db.session.commit()
+    if commit:
+        db.session.commit()
     return case, secret
 
 

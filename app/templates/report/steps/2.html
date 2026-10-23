@@ -1,0 +1,30 @@
+{% from "macros/ui.html" import helpline %}
+<h1 class="form-title">{{ t('step.2.question') }}</h1>
+<p class="hint">{{ t('step.2.help') }}</p>
+<div class="notice notice--safety">
+  <p><strong>{{ t('step.2.safety_note') }}</strong></p>
+  <div class="helplines">{% for n in national_helplines %}{{ helpline(n) }}{% endfor %}</div>
+</div>
+<form method="post" novalidate data-autosave="report-step-2" data-once>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <fieldset class="field {{ 'field--error' if errors.immediate_danger }}" {% if errors.immediate_danger %}aria-describedby="danger-error"{% endif %}>
+    <legend class="sr-only">{{ t('step.2.question') }}</legend>
+    <div class="choices">
+      {% for key, desc in [('yes', 'step.2.yes_desc'), ('unsure', 'step.2.unsure_desc'), ('no', 'step.2.no_desc')] %}
+      <label class="choice">
+        <input type="radio" name="immediate_danger" value="{{ key }}" {% if values.get('immediate_danger') == key %}checked{% endif %}>
+        <span><span class="choice__title">{{ t('step.2.' ~ key) }}</span><span class="choice__desc">{{ t(desc) }}</span></span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if errors.immediate_danger %}<p class="error-text" id="danger-error">{{ t(errors.immediate_danger) }}</p>{% endif %}
+  </fieldset>
+  <div class="field">
+    <label class="check"><input type="checkbox" name="child_involved" value="y" {% if values.get('child_involved') == 'y' %}checked{% endif %} aria-describedby="child-help"><span>{{ t('step.2.child') }}</span></label>
+    <p class="hint" id="child-help">{{ t('step.2.child_help') }}</p>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ t('report.continue') }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('report.step', step=1) }}">{{ t('report.back') }}</a>
+  </div>
+</form>
