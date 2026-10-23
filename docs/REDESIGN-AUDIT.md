@@ -162,6 +162,9 @@ Defects found in `1e55dfe` and fixed in the next commit, each with a regression 
 | Low | A browser set to English overrode the Bangla-first default. | Only the visitor's own choice switches language. |
 | Low | Copy promised review "by a trained person" and supervised staff, which the code cannot guarantee. | Reworded to what the system records. |
 | Low | A draft stuck mid-submit by a crashed process was never purged. | Purged an hour after expiry. |
+| High | Production uses PostgreSQL, but a plain `postgresql://` URL loads `psycopg2`, which is not installed; the app would have failed to start. | Every PostgreSQL URL is routed to the bundled `psycopg` 3 driver, with pool settings that work behind transaction-mode poolers. |
+| High | Running the app locally with the production `DATABASE_URL` and the default development profile would have migrated production and seeded demo staff accounts with a published password. | Development start-up only migrates and seeds a local database. A separate `migrate` profile runs schema changes and never seeds. |
+| Medium | There was no safe way to see the production schema revision. | `scripts/db_status.py` reports it read-only and never prints the URL. |
 
 Finding 2 in section 3 (the chat token in the session cookie) is reassessed as low. The token only opens the visitor's own conversation, it is cleared on leaving and on quick exit, and the cookie is `HttpOnly` and `Secure` in production.
 

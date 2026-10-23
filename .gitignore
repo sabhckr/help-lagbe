@@ -17,3 +17,5 @@ env/
 htmlcov/
 instance/
 venv/
+.env.*
+!.env.example

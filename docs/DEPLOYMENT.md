@@ -1,73 +1,71 @@
 # Deploying Help Lagbe? (checked 23 October 2026)
 
-**Status: do not deploy yet.** The code passes every local check, but one production setting cannot be verified without Vercel account access: where the production database lives. Section 3 gives the smallest action needed from the owner.
+**Status: ready to deploy once the production database has been checked and migrated, in that order.** Pushing `main` first would break the report form, because the new tables would be missing.
 
-## 1. Verified facts
+## 1. Facts
 
-| Fact | How it was verified |
+| Fact | Source |
 |---|---|
+| Production `DATABASE_URL` starts with `postgresql`. | Confirmed by the owner from the Vercel dashboard, 23 October. |
 | The live site runs commit `9322729`. | Its `app.css` and `app.js` are byte-identical to that commit. |
-| The live site is served by Vercel. | `server: Vercel` and `x-vercel-id` response headers. |
-| The live app runs its production profile. | It sends `Strict-Transport-Security: max-age=31536000; includeSubDomains`, which this app sets only in production. |
-| The live database holds no development seed data. | The live home page says nothing is published; the seed publishes an article. |
-| The repository has no `vercel.json`, `.vercelignore` or `.vercel/` link. | File listing. Vercel finds the Flask app through the top-level `app` in `wsgi.py` ([Vercel Flask docs](https://vercel.com/docs/frameworks/backend/flask)). |
+| The live site is served by Vercel and runs the app's production profile. | `server: Vercel`, `x-vercel-id`, and the production-only HSTS header. |
+| The live database holds no development seed data. | The live home page shows nothing published. |
+| The repository has no `vercel.json` or `.vercel/` link. | File listing. Vercel finds the Flask `app` in `wsgi.py` ([Vercel Flask docs](https://vercel.com/docs/frameworks/backend/flask)). |
 | Vercel Functions accept at most 4.5 MB per request and per response. | [Vercel Functions limits](https://vercel.com/docs/functions/limitations). |
-| Production never runs migrations by itself. | `create_app` migrates only in development. |
-| All four migrations upgrade, downgrade and re-upgrade cleanly, and match the models. | Run on fresh SQLite and on a local PostgreSQL 17 database (`flask db upgrade`, `downgrade base`, `upgrade`, `check`). |
-| Old category values are mapped to the new ones. | An old-format case inserted at the initial revision reads `harassment` after upgrade, on both databases. |
-| The full test suite passes on SQLite and on PostgreSQL. | 128 tests each. |
+| Production never migrates by itself. | `create_app` migrates only in development, and only against a local database. |
+| All four migrations upgrade, downgrade and re-upgrade, and match the models. | Run on SQLite and on local PostgreSQL 17, including with `postgres://` and `postgresql://` URLs. |
+| The full test suite passes on SQLite and PostgreSQL. | 139 tests. |
 
-## 2. Not verified (needs account access)
+An earlier version of this document inferred that production used SQLite, because commit `9322729` installs no PostgreSQL driver. That inference was wrong. The live build must get a PostgreSQL driver some other way, for example a custom Install Command in Vercel; this is not verified. The new code does not depend on it: it installs `psycopg` 3 and rewrites any `postgres://`, `postgresql://` or `postgresql+psycopg2://` URL to use that driver.
 
-1. **Production `DATABASE_URL`.** Its provider and whether it is durable are unknown. Commit `9322729` installs no PostgreSQL, MySQL or Redis driver, and the live `/healthz` query succeeds. A database that works with only the Python standard library is SQLite. *Inference, not confirmed:* the live site probably uses a SQLite file, and a SQLite file on Vercel is not durable storage for reports.
-2. **Production `RATELIMIT_STORAGE_URI`.** The production profile refuses `memory://`, so something else is set; its value is unknown.
-3. **How deployments are triggered.** The live site changed after the 22 October push to `main`, which is consistent with Vercel's Git integration, but this was not confirmed. A manual deploy would look the same from outside.
-4. **The Alembic revision of the production database**, or whether it was created without Alembic.
-5. **The client address seen by the app on Vercel.** Rate limits key on the visitor's address. If the app sees Vercel's proxy address instead, everyone shares one limit, and `TRUSTED_PROXY_COUNT=1` is needed.
+## 2. Still unverified
 
-## 3. Smallest action needed from the owner
+1. **The schema revision of the production database.** Step 1 below checks it without changing anything.
+2. **`RATELIMIT_STORAGE_URI`.** Whatever works today keeps working, because the new requirements include everything `9322729` had, plus `redis`.
+3. **How deploys are triggered.** The live site changed after the push to `main`. That fits Vercel's Git integration but was not confirmed. Treat a push to `main` as a deploy.
+4. **The client address the app sees on Vercel.** If rate limits group everyone under one proxy address, set `TRUSTED_PROXY_COUNT=1`.
 
-In Vercel, open the help-lagbe project, then **Settings → Environment Variables → Production**, and report only the part of each value before `://` (never the full value):
+## 3. Procedure
 
-- `DATABASE_URL`
-- `RATELIMIT_STORAGE_URI`
+Run these from a clone of this repository with its virtualenv active. The production URL is typed into a hidden prompt, so it never appears on screen or in shell history.
 
-Then open **Settings → Git** and note whether the production branch is `main` with automatic deploys on.
+**Step 1: read-only check.**
 
-If `DATABASE_URL` starts with `sqlite`, a durable database must be provisioned before real reports are accepted. That needs the owner's authorisation; the code already supports `postgresql+psycopg://` and `redis://`.
+```bash
+read -rs DATABASE_URL && export DATABASE_URL
+python scripts/db_status.py
+```
 
-## 4. Deployment sequence (once section 3 is resolved)
+The script prints the driver, the Alembic revision, table and row counts and a verdict. It never prints the URL and never writes. Expected: revision `38dfa181b5f7`, verdict "needs `flask db upgrade`". If it reports tables without Alembic history, stop: the schema must be compared before anything is stamped.
 
-1. **Back up** the production database.
-2. From a trusted machine, with the production variables loaded from Vercel (never written into the repository), check the schema without changing it:
+**Step 2: back up.** Take a snapshot or branch of the production database in the provider's dashboard.
 
-   ```bash
-   flask --app wsgi.py db current
-   ```
+**Step 3: migrate.** The `migrate` profile never seeds data, never needs the application secrets, and refuses to run without an explicit `DATABASE_URL`.
 
-   It should print `38dfa181b5f7`. If it prints nothing but the tables exist, the database was created without Alembic; stop and compare the schema before stamping it.
-3. **Migrate**, then confirm the revision:
+```bash
+APP_ENV=migrate flask --app wsgi.py db upgrade
+python scripts/db_status.py
+unset DATABASE_URL
+```
 
-   ```bash
-   flask --app wsgi.py db upgrade
-   flask --app wsgi.py db current
-   ```
+Expected verdict: "already at the latest revision" (`c3cee4c88fb2`).
 
-   It should now print `c3cee4c88fb2`. The changes add two tables and two nullable columns, and map old category values to the new ones.
-4. **Deploy** the new commit. Deploying before step 3 breaks the report form at its first step, because the drafts table would be missing.
-5. **Check** `/healthz`, the home page, `/report/1` and a staff sign-in.
+**Step 4: deploy.** Push `main`, or promote the deployment in Vercel. The site that is live now keeps working against the migrated schema in the meantime. The only visible effect there is that its staff pages show new category keys untranslated.
 
-**Rollback:** redeploy the previous build. The migrated schema stays compatible with it. The only visible effect is that staff pages of the old build show new category keys untranslated. Do not downgrade below `c3cee4c88fb2` once evidence is stored; that downgrade refuses to run while encrypted files exist.
+**Step 5: check.** Open `/healthz`, the home page and `/report/1`, and test a staff sign-in.
 
-## 5. Environment variables (names only)
+**Rollback:** redeploy the previous build; the schema can stay. Do not downgrade below `c3cee4c88fb2` once evidence is stored. That downgrade refuses to run while encrypted files exist, and the category mapping in `f8e40f3bb73c` is one-way, so restore from the step 2 backup if the data must go back.
+
+## 4. Environment variables (names only)
 
 Required in production: `APP_ENV=production`, `SECRET_KEY`, `IDENTITY_ENCRYPTION_KEY`, `DATABASE_URL`, `RATELIMIT_STORAGE_URI`, `SESSION_COOKIE_SECURE=true`.
 
-Optional: `MAX_UPLOAD_MB` (defaults to 4 on Vercel and 25 elsewhere), `TRUSTED_PROXY_COUNT`, `CLAMD_SOCKET`, `DATA_RETENTION_DAYS_CLOSED_CASES`. `EVIDENCE_DIR` is now only read for evidence uploaded before database storage.
+Optional: `MAX_UPLOAD_MB` (defaults to 4 on Vercel and 25 elsewhere), `TRUSTED_PROXY_COUNT`, `CLAMD_SOCKET`, `DATA_RETENTION_DAYS_CLOSED_CASES`. `EVIDENCE_DIR` is only read for files uploaded before database storage.
 
-## 6. Known limitations on Vercel
+## 5. Behaviour on Vercel
 
-- Uploads are capped at 4 MB per request by default, to stay under Vercel's 4.5 MB limit.
-- No malware scanner can run on Vercel, so uploads are honestly marked "not scanned".
-- Evidence is stored encrypted in the database. That works on a read-only, multi-instance host, but the database grows with each file.
-- There is no scheduler. Expired drafts and receipts are deleted whenever the report form is used, at most once a minute per instance. `flask housekeeping` does the same on demand.
+- **Connection pool:** PostgreSQL connections use a small pool on Vercel, recycle after five minutes, and disable server-side prepared statements, so transaction-mode poolers such as PgBouncer, Neon and Supabase work.
+- **Uploads:** they are capped at 4 MB per request by default, under Vercel's 4.5 MB limit.
+- **Evidence storage:** evidence is stored encrypted in the database, so no writable disk is needed.
+- **Scanning:** no malware scanner runs on Vercel, so uploads are honestly marked "not scanned".
+- **Clean-up:** there is no scheduler. Expired drafts and receipts are deleted when the report form is used, at most once a minute per instance. `flask housekeeping` does the same on demand.

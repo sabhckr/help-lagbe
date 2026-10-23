@@ -15,7 +15,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from app import permissions as P
 from app.extensions import bcrypt, csrf, db, limiter, login_manager, migrate
 from app.i18n import get_locale, init_i18n, translate
-from config import get_config
+from config import get_config, is_local_database
 
 # Re-exported for backwards compatibility with the original package layout.
 __all__ = ["create_app", "db", "bcrypt", "login_manager"]
@@ -30,6 +30,8 @@ def create_app(config_name: str | None = None, overrides: dict | None = None) ->
         app.config.update(overrides)
     if app.config.get("ENV_NAME") == "production":
         cfg.validate()  # type: ignore[attr-defined]
+    if app.config.get("ENV_NAME") == "migrate" and not os.environ.get("DATABASE_URL"):
+        raise RuntimeError("APP_ENV=migrate needs DATABASE_URL set explicitly, so the target database is never a default.")
     try:
         os.makedirs(app.instance_path, exist_ok=True)
     except OSError:
@@ -83,6 +85,10 @@ def create_app(config_name: str | None = None, overrides: dict | None = None) ->
         with app.app_context():
             db.create_all()
     elif env == "development" and app.config.get("AUTO_UPGRADE_DB", True):
+        if not is_local_database(app.config["SQLALCHEMY_DATABASE_URI"]):
+            # Never migrate or seed demo accounts into a remote database from a development run.
+            logging.getLogger(__name__).warning("development start-up skipped migrations and demo data: database is not local")
+            return app
         with app.app_context():
             migrations_dir = os.path.join(os.path.dirname(app.root_path), "migrations")
             if os.path.isdir(migrations_dir):

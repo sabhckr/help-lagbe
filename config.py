@@ -31,6 +31,41 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def normalise_database_url(url: str) -> str:
+    """Route every PostgreSQL URL to the bundled psycopg (version 3) driver.
+
+    Hosting dashboards and integrations usually hand out `postgres://` or `postgresql://`, which
+    SQLAlchemy maps to psycopg2. Only psycopg 3 is installed, so the scheme is rewritten. Query
+    parameters such as `sslmode=require` are kept as they are.
+    """
+    for prefix in ("postgres://", "postgresql://", "postgresql+psycopg2://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix) :]
+    return url
+
+
+def engine_options(url: str) -> dict[str, Any]:
+    options: dict[str, Any] = {"pool_pre_ping": True}
+    if url.startswith("postgresql+psycopg://"):
+        options["pool_recycle"] = 300
+        # Transaction-mode poolers (PgBouncer, Neon, Supabase) reject server-side prepared statements.
+        options["connect_args"] = {"prepare_threshold": None}
+        if os.environ.get("VERCEL"):
+            # Many short-lived function instances: keep each one's pool small.
+            options.update(pool_size=2, max_overflow=3)
+    return options
+
+
+def is_local_database(url: str) -> bool:
+    """True for SQLite and for servers on this machine. Development conveniences only run against these."""
+    if url.startswith("sqlite:"):
+        return True
+    from urllib.parse import urlsplit
+
+    host = (urlsplit(url).hostname or "").lower()
+    return host in ("", "localhost", "127.0.0.1", "::1")
+
+
 class BaseConfig:
     ENV_NAME = "base"
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-in-prod")
@@ -38,9 +73,9 @@ class BaseConfig:
     #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     IDENTITY_ENCRYPTION_KEY = os.environ.get("IDENTITY_ENCRYPTION_KEY", "")
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'help_lagbe.db'}")
+    SQLALCHEMY_DATABASE_URI = normalise_database_url(os.environ.get("DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'help_lagbe.db'}"))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS: dict[str, Any] = {"pool_pre_ping": True}
+    SQLALCHEMY_ENGINE_OPTIONS: dict[str, Any] = engine_options(SQLALCHEMY_DATABASE_URI)
 
     # Sessions / cookies
     SESSION_COOKIE_NAME = "hl_session"
@@ -125,6 +160,18 @@ class TestingConfig(BaseConfig):
     PREFERRED_URL_SCHEME = "http"
 
 
+class MigrateConfig(BaseConfig):
+    """Schema work only: `APP_ENV=migrate DATABASE_URL=... flask --app wsgi.py db current|upgrade`.
+
+    Never seeds, never auto-migrates on start-up, and needs no application secrets.
+    """
+
+    ENV_NAME = "migrate"
+    DEBUG = False
+    SEED_DEMO_DATA = False
+    AUTO_UPGRADE_DB = False
+
+
 class ProductionConfig(BaseConfig):
     ENV_NAME = "production"
     DEBUG = False
@@ -152,6 +199,7 @@ CONFIGS = {
     "development": DevelopmentConfig,
     "testing": TestingConfig,
     "production": ProductionConfig,
+    "migrate": MigrateConfig,
 }
 
 

@@ -22,7 +22,10 @@ def app(tmp_path):
     # Opt-in: run the same suite against a throwaway PostgreSQL database.
     url = os.environ.get("TEST_DATABASE_URL")
     if url:
-        overrides.update({"SQLALCHEMY_DATABASE_URI": url, "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": False}})
+        from config import engine_options, normalise_database_url
+
+        url = normalise_database_url(url)
+        overrides.update({"SQLALCHEMY_DATABASE_URI": url, "SQLALCHEMY_ENGINE_OPTIONS": engine_options(url)})
     application = create_app("testing", overrides)
     with application.app_context():
         seed_demo()
