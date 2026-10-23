@@ -1,0 +1,12 @@
+{# Approve or turn down one reply. Expects `r`. #}
+<form method="post" action="{{ url_for('workspace.story_reply_review', reply_id=r.id) }}" class="stack-sm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="back" value="{{ request.path }}">
+  <div class="field mb-0"><label for="rd-{{ r.id }}">{{ t('story.ws_decision') }}</label>
+    <select name="decision" id="rd-{{ r.id }}">
+      {% if r.status == 'pending' %}<option value="publish">{{ t('story.ws_publish_reply') }}</option>{% endif %}
+      <option value="reject">{{ t('story.ws_reject_reply') }}</option>
+    </select></div>
+  <div class="field mb-0"><label for="rr-{{ r.id }}">{{ t('story.ws_reason') }}</label><textarea name="reason" id="rr-{{ r.id }}" rows="2"></textarea><p class="hint">{{ t('story.ws_reason_hint') }}</p></div>
+  <button type="submit" class="btn btn-primary btn-sm">{{ t('ui.save') }}</button>
+</form>

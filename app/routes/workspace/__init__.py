@@ -51,4 +51,4 @@ def any_permission(*perms: str):
     return decorator
 
 
-from app.routes.workspace import admin, cases, editorial, home, moderation, support_desk  # noqa: E402,F401
+from app.routes.workspace import admin, cases, editorial, home, moderation, stories, support_desk  # noqa: E402,F401

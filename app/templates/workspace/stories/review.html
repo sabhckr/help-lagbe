@@ -1,0 +1,47 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/forms.html" import field %}
+{% block title %}{{ story.reference }} · {{ t('ws.stories') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<p><a href="{{ url_for('workspace.stories') }}">← {{ t('ws.stories') }}</a></p>
+<div class="page-head"><div><h1>{{ story.title or t('voices.untitled') }}</h1><p class="muted">{{ story.reference }} · {{ t('story_status.' ~ story.status) }} · {{ story.created_at|dt }}</p></div></div>
+
+{% if warnings %}
+<div class="notice notice--warn"><h2>{{ t('story.ws_identifiers_title') }}</h2><p>{{ t('story.ws_identifiers_text') }}</p><ul>{% for kind in warnings %}<li>{{ t('redaction.kind_' ~ kind) }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<dl class="kv">
+  <dt>{{ t('story.f_topic') }}</dt><dd>{{ t('story_topic.' ~ story.topic) }}</dd>
+  <dt>{{ t('story.f_display') }}</dt><dd>{{ t('story_display.' ~ story.display_mode) }}{% if story.display_name %}: {{ story.display_name }}{% endif %}</dd>
+  <dt>{{ t('story.f_support') }}</dt><dd>{{ t('story_support.' ~ story.support_wanted) }}</dd>
+  <dt>{{ t('story.f_replies') }}</dt><dd>{{ t('story_replies.' ~ story.reply_mode) }}</dd>
+  <dt>{{ t('story.f_warning') }}</dt><dd>{{ t('story_warning.' ~ story.content_warning) }}</dd>
+  <dt>{{ t('case.language') }}</dt><dd>{{ LANGUAGE_NAMES.get(story.language, story.language) }}</dd>
+  {% if story.review_reason %}<dt>{{ t('story.ws_reason') }}</dt><dd>{{ story.review_reason }}{% if story.reviewed_by %} — {{ story.reviewed_by.name }}, {{ story.reviewed_at|dt }}{% endif %}</dd>{% endif %}
+</dl>
+
+<div class="narrative">{{ story.body }}</div>
+{% for img in story.images %}
+<figure class="story-figure"><img src="{{ url_for('voices.image', image_id=img.id) }}" alt="{{ story.image_description or t('voices.photo_alt') }}" width="{{ img.width }}" height="{{ img.height }}" loading="lazy"><figcaption class="small muted">{{ t('story.ws_image_note') }}</figcaption></figure>
+{% endfor %}
+{% if story.image_description %}<p class="small"><strong>{{ t('story.f_image_description') }}:</strong> {{ story.image_description }}</p>{% endif %}
+
+<h2>{{ t('story.ws_decide_title') }}</h2>
+<p class="muted">{{ t('story.ws_checklist') }}</p>
+<form method="post" class="card" novalidate>
+  {{ form.hidden_tag() }}
+  {{ field(form.decision) }}
+  {{ field(form.reason, help='story.ws_reason_hint', rows=3) }}
+  <button type="submit" class="btn btn-primary">{{ t('ui.save') }}</button>
+</form>
+
+{% if story.replies %}
+<h2>{{ t('story.ws_replies_title') }}</h2>
+{% for r in story.replies %}
+<div class="card" id="reply-{{ r.id }}">
+  <div class="small muted">{{ r.display_name or t('voices.anonymous') }} · {{ t('story_status.' ~ r.status) }} · {{ r.created_at|dt }}</div>
+  <p class="my-1 pre-line">{{ r.body }}</p>
+  {% if r.status != 'rejected' %}{% include "workspace/stories/_reply_decision.html" %}{% endif %}
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

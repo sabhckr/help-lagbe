@@ -101,6 +101,8 @@ class BaseConfig:
     # Vercel Functions accept at most 4.5 MB per request body, so the default there is 4 MB.
     MAX_CONTENT_LENGTH = _env_int("MAX_UPLOAD_MB", 4 if ON_VERCEL else 25) * 1024 * 1024
     EVIDENCE_MAX_FILES_PER_REPORT = 5
+    STORY_MAX_IMAGES = 3
+    STORY_IMAGE_MAX_BYTES = 3 * 1024 * 1024
     EVIDENCE_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "pdf", "mp3", "m4a", "mp4", "txt"}
     CLAMD_SOCKET = os.environ.get("CLAMD_SOCKET", "")  # e.g. /var/run/clamav/clamd.ctl ; empty = scanner unavailable
 

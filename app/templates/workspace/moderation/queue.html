@@ -10,6 +10,8 @@
   <div class="cluster"><span class="badge badge-warn">{{ t('flag_reason.' ~ f.reason) }}</span><span class="badge badge-muted">{{ t('flag_target.' ~ f.target_type) }} #{{ f.target_id }}</span><span class="small muted">{{ f.created_at|dt }} · {{ f.raised_by.name if f.raised_by else t('audit.public') }}</span></div>
   <p class="my-1">{{ f.notes }}</p>
   {% if f.target_type == 'case' %}<p class="small"><a href="{{ url_for('workspace.cases') }}">{{ t('ws.cases') }}</a> → {{ t('moderation.case_id_note') }}</p>{% endif %}
+  {% if f.target_type == 'story' and current_user.can(P.STORY_MODERATE) %}<p class="small"><a href="{{ url_for('workspace.story_review', story_id=f.target_id) }}">{{ t('story.ws_open_story') }}</a></p>{% endif %}
+  {% if f.target_type == 'story_reply' and current_user.can(P.STORY_MODERATE) %}<p class="small"><a href="{{ url_for('workspace.story_reply_story', reply_id=f.target_id) }}">{{ t('story.ws_open_story') }}</a></p>{% endif %}
   {% if f.status == 'open' and current_user.can(P.MOD_ACT) %}
   <details><summary class="small">{{ t('moderation.act') }}</summary>
     <form method="post" action="{{ url_for('workspace.flag_act', flag_id=f.id) }}" class="stack-sm">{{ action_form.hidden_tag() }}

@@ -1,6 +1,6 @@
 # Deploying Help Lagbe? (checked 23 October 2026)
 
-**Status: the production database was migrated to `c3cee4c88fb2` on 23 October ([PRODUCTION-MIGRATION.md](PRODUCTION-MIGRATION.md)). Deploying `main` is the next step.** Pushing `main` first would break the report form, because the new tables would be missing.
+**Status: production is at `c3cee4c88fb2` (migrated 23 October, [PRODUCTION-MIGRATION.md](PRODUCTION-MIGRATION.md)) and runs `dc4a8f0`. The stories redesign needs `f92c92f789d8` first.** Deploying it before that migration would break the home page, which lists published stories from a table production does not have yet. The SQL and the rehearsal are in the second part of PRODUCTION-MIGRATION.md.
 
 ## 1. Facts
 
@@ -8,15 +8,15 @@
 |---|---|
 | Production `DATABASE_URL` starts with `postgresql`. | Confirmed by the owner from the Vercel dashboard, 23 October. |
 | Production's database is Neon project "Help Lagbe", branch `production`, database `neondb`. It was at revision `38dfa181b5f7` with every table empty, and was migrated to `c3cee4c88fb2` on 23 October. | Queries in the Neon SQL editor, 23 October, on the branch the owner named. A snapshot was taken first. |
-| The live site runs commit `35a07e6`. Every push to `main` deploys. | Vercel's GitHub commit statuses: "Deployment has completed" for `35a07e6` (22 October, 14:00 UTC) and for each push before it, except `b299e3c`, which failed. `9322729` has no Vercel status. Its static files are identical to `35a07e6`, which misled an earlier check. |
+| The live site runs commit `dc4a8f0`. Every push to `main` deploys. | Pushed and smoke-tested on 23 October. Before that, Vercel's GitHub commit statuses showed "Deployment has completed" for `35a07e6` and each push before it, except `b299e3c`, which failed. |
 | The live site is served by Vercel and runs the app's production profile. | `server: Vercel`, `x-vercel-id`, and the production-only HSTS header. |
 | The live database holds no development seed data. | The live home page shows nothing published. |
 | Vercel builds from `api/index.py` (the entry point), `vercel.json` (functions pinned to region `sin1`, next to the Neon database in Singapore), `.python-version` (3.12) and the `[project]` dependency list in `pyproject.toml`. That list must match `requirements.txt`, and a test checks this. | Commits `b299e3c`–`35a07e6`. |
 | Templates live in `app/templates/site`, not `public`. | Vercel leaves directories named `public` out of the function bundle (commit `35a07e6`). A test keeps any `app/**/public` directory from coming back. |
 | Vercel Functions accept at most 4.5 MB per request and per response. | [Vercel Functions limits](https://vercel.com/docs/functions/limitations). |
 | Production never migrates by itself. | `create_app` migrates only in development, and only against a local database. |
-| All four migrations upgrade, downgrade and re-upgrade, and match the models. | Run on SQLite and on local PostgreSQL 17, including with `postgres://` and `postgresql://` URLs. |
-| The full test suite passes on SQLite and PostgreSQL. | 139 tests. |
+| All five migrations upgrade, downgrade and re-upgrade, and match the models. `f92c92f789d8` refuses to downgrade once a story exists. | Run on SQLite and on local PostgreSQL 17, including with `postgres://` and `postgresql://` URLs. |
+| The full test suite passes on SQLite and PostgreSQL. | 182 tests, 23 October. |
 
 An earlier version of this document inferred that production used SQLite, because commit `9322729` installs no PostgreSQL driver. That inference was wrong: commit `b299e3c` added `psycopg` 3 for the live build. The code rewrites any `postgres://`, `postgresql://` or `postgresql+psycopg2://` URL to use that driver.
 
@@ -39,7 +39,7 @@ read -rs DATABASE_URL && export DATABASE_URL
 python scripts/db_status.py
 ```
 
-The script prints the driver, the Alembic revision, table and row counts and a verdict. It never prints the URL and never writes. Expected: revision `38dfa181b5f7`, verdict "needs `flask db upgrade`". If it reports tables without Alembic history, stop: the schema must be compared before anything is stamped.
+The script prints the driver, the Alembic revision, table and row counts and a verdict. It never prints the URL and never writes. Expected: the revision production is at (now `c3cee4c88fb2`), verdict "needs `flask db upgrade`". If it reports tables without Alembic history, stop: the schema must be compared before anything is stamped.
 
 **Step 2: back up.** Take a snapshot or branch of the production database in the provider's dashboard.
 
@@ -51,11 +51,13 @@ python scripts/db_status.py
 unset DATABASE_URL
 ```
 
-Expected verdict: "already at the latest revision" (`c3cee4c88fb2`).
+Expected verdict: "already at the latest revision" (`f92c92f789d8`).
 
 **Step 4: deploy.** Push `main`, or promote the deployment in Vercel. The site that is live now keeps working against the migrated schema in the meantime. The only visible effect there is that its staff pages show new category keys untranslated.
 
-**Step 5: check.** Open `/healthz`, the home page and `/report/1`, and test a staff sign-in.
+**Step 5: check.** Open `/healthz`, the home page, `/report/1`, `/voices/` and `/accountability`, and test a staff sign-in.
+
+**Before stories can appear:** only the moderator and supervisor roles can publish stories and replies. An admin cannot, by design. An admin creates a moderator account under Workspace → Users. Until one exists, stories wait in the queue and the public list says nothing has been published yet.
 
 **Rollback:** redeploy the previous build; the schema can stay. Do not downgrade below `c3cee4c88fb2` once evidence is stored. That downgrade refuses to run while encrypted files exist, and the category mapping in `f8e40f3bb73c` is one-way, so restore from the step 2 backup if the data must go back.
 
@@ -82,5 +84,6 @@ Optional: `ALLOW_MEMORY_RATELIMIT` (lets production start without a shared rate-
 - **Connection pool:** PostgreSQL connections use a small pool on Vercel, recycle after five minutes, and disable server-side prepared statements, so transaction-mode poolers such as PgBouncer, Neon and Supabase work.
 - **Uploads:** they are capped at 4 MB per request by default, under Vercel's 4.5 MB limit.
 - **Evidence storage:** evidence is stored encrypted in the database, so no writable disk is needed.
+- **Story photos:** up to 3 photos of up to 3 MB each are accepted, but on Vercel the whole request must stay under 4 MB, and the form says so. Each photo is decoded and re-encoded with Pillow, which drops location and camera details. It is then stored encrypted in the database and served only after a moderator publishes the story. Audio and video are not accepted.
 - **Scanning:** no malware scanner runs on Vercel, so uploads are honestly marked "not scanned".
-- **Clean-up:** there is no scheduler. Expired drafts and receipts are deleted when the report form is used, at most once a minute per instance. `flask housekeeping` does the same on demand.
+- **Clean-up:** there is no scheduler. Expired drafts and receipts are deleted when the report form is used, at most once a minute per instance. `flask housekeeping` does the same on demand, and also deletes stories and replies turned down more than 30 days ago. Nothing does that last part automatically on Vercel yet.

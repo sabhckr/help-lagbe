@@ -1,0 +1,9 @@
+{# Report a story or reply to the moderators. Expects `target` and `target_id`. #}
+<form method="post" action="{{ url_for('voices.report') }}" class="stack-sm mt-2">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="target" value="{{ target }}"><input type="hidden" name="target_id" value="{{ target_id }}">
+  <div class="field mb-0"><label for="reason-{{ target }}-{{ target_id }}">{{ t('story.report_reason') }}</label>
+    <select name="reason" id="reason-{{ target }}-{{ target_id }}">{% for key in ('coordinated_harassment', 'threat', 'doxxing', 'prohibited_material', 'spam', 'other') %}<option value="{{ key }}">{{ t('story_report_reason.' ~ key) }}</option>{% endfor %}</select></div>
+  <div class="field mb-0"><label for="notes-{{ target }}-{{ target_id }}">{{ t('story.report_notes') }}</label><textarea name="notes" id="notes-{{ target }}-{{ target_id }}" rows="2" maxlength="1000"></textarea></div>
+  <button type="submit" class="btn btn-ghost btn-sm">{{ t('voices.report_send') }}</button>
+</form>

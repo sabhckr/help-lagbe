@@ -1,0 +1,30 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t('voices.title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="section-head mb-0">
+    <p class="eyebrow">{{ t('voices.eyebrow') }}</p>
+    <h1>{{ t('voices.heading') }}</h1>
+    <p class="lead">{{ t('voices.lead') }}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('voices.new') }}">{{ t('home.cta_write') }}</a>
+</div>
+
+<nav class="filter-chips" aria-label="{{ t('voices.filter_label') }}">
+  <a class="chip" href="{{ url_for('voices.index') }}" {% if not topic %}aria-current="true"{% endif %}>{{ t('voices.all_topics') }}</a>
+  {% for key in topics %}<a class="chip" href="{{ url_for('voices.index', topic=key) }}" {% if topic == key %}aria-current="true"{% endif %}>{{ t('story_topic.' ~ key) }}</a>{% endfor %}
+</nav>
+
+<div class="story-list">
+  {% for s in stories %}{% include "voices/_card.html" %}{% else %}
+  <div class="empty-state"><p class="empty-state__title">{{ t('voices.none_title') }}</p><p class="muted">{{ t('voices.none_text') }}</p><a class="btn btn-primary" href="{{ url_for('voices.new') }}">{{ t('home.cta_write') }}</a></div>
+  {% endfor %}
+</div>
+{% if page > 1 or has_next %}
+<nav class="pagination" aria-label="{{ t('ui.pagination') }}">
+  {% if page > 1 %}<a href="{{ url_for('voices.index', topic=topic, page=page - 1) }}">← {{ t('ui.prev') }}</a>{% endif %}
+  {% if has_next %}<a href="{{ url_for('voices.index', topic=topic, page=page + 1) }}">{{ t('ui.next') }} →</a>{% endif %}
+</nav>
+{% endif %}
+<p class="small muted mt-4">{{ t('voices.moderation_note') }}</p>
+{% endblock %}

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="theme-color" content="#713747">
+  <meta name="theme-color" content="#F8F6F0">
   <meta name="referrer" content="no-referrer">
   {% block robots %}{% endblock %}
   <meta name="description" content="{{ t('site.description') }}">
@@ -13,8 +13,8 @@
   <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@600&display=swap">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=2">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@500;600&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v=3">
   <script src="{{ url_for('static', filename='js/boot.js') }}"></script>
   {% block head %}{% endblock %}
 </head>
@@ -34,11 +34,11 @@
     </button>
     <nav class="site-nav" id="site-nav" aria-label="{{ t('nav.primary') }}">
       <ul class="site-nav__list">
-        <li><a href="{{ url_for('public.home') }}" {% if request.endpoint == 'public.home' %}aria-current="page"{% endif %}>{{ t('nav.home') }}</a></li>
+        <li><a href="{{ url_for('voices.index') }}" {% if request.endpoint and request.endpoint.startswith('voices.') %}aria-current="page"{% endif %}>{{ t('nav.voices') }}</a></li>
         <li><a href="{{ url_for('public.help_page') }}" {% if request.endpoint == 'public.help_page' %}aria-current="page"{% endif %}>{{ t('nav.get_help') }}</a></li>
         <li><a href="{{ url_for('report.new') }}" {% if request.endpoint and request.endpoint.startswith('report.') %}aria-current="page"{% endif %}>{{ t('nav.report') }}</a></li>
+        <li><a href="{{ url_for('public.accountability') }}" {% if request.endpoint in ('public.accountability', 'public.stories', 'public.story') %}aria-current="page"{% endif %}>{{ t('nav.accountability') }}</a></li>
         <li><a href="{{ url_for('track.index') }}" {% if request.endpoint and request.endpoint.startswith('track.') %}aria-current="page"{% endif %}>{{ t('nav.track') }}</a></li>
-        <li><a href="{{ url_for('public.stories') }}" {% if request.endpoint in ('public.stories', 'public.story') %}aria-current="page"{% endif %}>{{ t('nav.stories') }}</a></li>
         <li><a href="{{ url_for('public.about') }}" {% if request.endpoint == 'public.about' %}aria-current="page"{% endif %}>{{ t('nav.about') }}</a></li>
       </ul>
     </nav>
@@ -83,7 +83,9 @@
           <li><a href="{{ url_for('public.contact') }}">{{ t('nav.contact') }}</a></li>
           <li><a href="{{ url_for('public.contact') }}#accessibility">{{ t('nav.accessibility') }}</a></li>
           <li><a href="{{ url_for('public.contact') }}#complaints">{{ t('nav.complaints') }}</a></li>
+          <li><a href="{{ url_for('public.stories') }}">{{ t('nav.stories') }}</a></li>
           <li><a href="{{ url_for('public.stories') }}#corrections">{{ t('nav.corrections') }}</a></li>
+          <li><a href="{{ url_for('voices.manage') }}">{{ t('nav.manage_story') }}</a></li>
         </ul>
       </nav>
       {% if current_user.is_authenticated %}

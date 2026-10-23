@@ -1,0 +1,37 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block title %}{{ t('voices.manage_title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ t('voices.manage_heading') }}</h1>
+  {% if deleted %}
+    <div class="notice notice--success" role="status"><p class="mb-0">{{ t('voices.manage_deleted') }}</p></div>
+    <p><a href="{{ url_for('voices.index') }}">{{ t('voices.back') }}</a></p>
+  {% elif story %}
+    <div class="card">
+      <p class="mb-1"><strong>{{ story.title or t('voices.untitled') }}</strong></p>
+      <p class="mb-1">{{ t('voices.manage_status') }}: <strong>{{ t('story_status.' ~ story.status) }}</strong></p>
+      <p class="small muted mb-0">{{ t('story_status.' ~ story.status ~ '_help') }}</p>
+      {% if story.status == 'published' %}<p class="mt-2 mb-0"><a href="{{ url_for('voices.detail', reference=story.reference) }}">{{ t('voices.manage_view') }}</a></p>{% endif %}
+    </div>
+    <form method="post" action="{{ url_for('voices.manage') }}" class="card mt-3">
+      {{ form.csrf_token }}
+      <input type="hidden" name="reference" value="{{ form.reference.data }}"><input type="hidden" name="code" value="{{ form.code.data }}">
+      <h2 class="mt-0">{{ t('voices.manage_delete_title') }}</h2>
+      <p>{{ t('voices.manage_delete_text') }}</p>
+      <label class="check"><input type="checkbox" name="confirm" value="y"><span>{{ t('voices.manage_confirm') }}</span></label>
+      <button type="submit" name="action" value="delete" class="btn btn-danger mt-2">{{ t('voices.manage_delete_button') }}</button>
+    </form>
+  {% else %}
+    <p class="lead">{{ t('voices.manage_lead') }}</p>
+    <form method="post" action="{{ url_for('voices.manage') }}" class="card" novalidate>
+      {{ form.csrf_token }}
+      {{ field(form.reference, placeholder='voices.manage_reference_placeholder', autocomplete='off', required=True) }}
+      {{ field(form.code, autocomplete='off', required=True) }}
+      <button type="submit" name="action" value="open" class="btn btn-primary">{{ t('voices.manage_open') }}</button>
+    </form>
+    <p class="small muted mt-3">{{ t('voices.manage_lost') }}</p>
+  {% endif %}
+</div>
+{% endblock %}

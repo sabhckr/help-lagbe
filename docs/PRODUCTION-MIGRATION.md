@@ -83,3 +83,33 @@ The SQL file was rehearsed on throwaway local PostgreSQL 17.11 databases on 23 O
 - Production's PostgreSQL version. The SQL uses only long-standing PostgreSQL features.
 - The Neon console labels. They come from Neon's documentation as of 23 October 2026.
 - That this Neon branch is the database Vercel's `DATABASE_URL` points to. It is the project's only branch, which makes this likely.
+
+---
+
+# Next: `c3cee4c88fb2` → `f92c92f789d8` (community stories), not run yet
+
+The stories redesign adds three tables: `stories`, `story_images` and `story_replies`. It changes no existing table or row. **Production must be at `f92c92f789d8` before the redesign is deployed.** The home page lists published stories, so it would fail without the `stories` table. The site that is live now ignores the new tables, so migrating first is safe.
+
+- [sql/upgrade-c3cee4c88fb2-to-f92c92f789d8.sql](sql/upgrade-c3cee4c88fb2-to-f92c92f789d8.sql) is the exact SQL to run. It holds Alembic's offline output, unchanged apart from indentation, inside one `DO` block, with the same checks before and after as the first upgrade.
+
+| | Revision | Tables | Columns | Column fingerprint | Index fingerprint |
+|---|---|---|---|---|---|
+| Before | `c3cee4c88fb2` | 31 | 331 | `41157c6ce3ed9f6da691943016eef62c` | `7b41eb26ff082dd411a6829d18128757` |
+| After | `f92c92f789d8` | 34 | 372 | `1082c7202c052b0addd9cdac4002d5cd` | `07435a01d201df638d882280456bbe44` |
+
+The **Before** row is the same as the **After** row of the first upgrade.
+
+**Steps:** the same as steps 1–5 above, with this file in step 4 and these rows in steps 1 and 5. Step 4's last result must be `f92c92f789d8 | true | true | true`. Step 3 can be skipped, because the first upgrade already showed that the editor runs a `DO` block in one piece. A fresh snapshot in step 2 replaces the one from the first upgrade on the Free plan.
+
+**Rolling back:** restore the step 2 snapshot, as above. `flask db downgrade` refuses to drop the tables once any story exists.
+
+**Rehearsed** on throwaway local PostgreSQL 17.11 databases on 23 October 2026, all dropped afterwards:
+
+- starting from `c3cee4c88fb2`, the fingerprint matched the **Before** row;
+- the file applied cleanly and the fingerprint matched the **After** row;
+- `flask db check` found no difference, and `scripts/db_status.py` reported "already at the latest revision";
+- `pg_dump --schema-only` was identical to an ordinary online `flask db upgrade`, apart from the random `\restrict` key that `pg_dump` 17.6+ writes into every dump;
+- a second run stopped at the first check and changed nothing;
+- with a conflicting `story_replies` table planted on purpose, it failed and left the database at `c3cee4c88fb2` with no new tables.
+
+**Not verified:** the same items as for the first upgrade, apart from the editor's handling of `DO` blocks.

@@ -22,6 +22,9 @@
     {% if current_user.can(P.MOD_QUEUE) %}
     <li><a href="{{ url_for('workspace.moderation') }}" {% if request.endpoint and request.endpoint.startswith('workspace.moderation') %}aria-current="page"{% endif %}>{{ t('ws.moderation') }}</a></li>
     {% endif %}
+    {% if current_user.can(P.STORY_MODERATE) %}
+    <li><a href="{{ url_for('workspace.stories') }}" {% if request.endpoint and request.endpoint.startswith('workspace.stor') %}aria-current="page"{% endif %}>{{ t('ws.stories') }}</a></li>
+    {% endif %}
     {% if current_user.can_any(P.ADMIN_USERS, P.ADMIN_CONFIG, P.ADMIN_HEALTH) %}
     <li class="workspace-nav__group">{{ t('ws.administration') }}</li>
     {% if current_user.can(P.ADMIN_USERS) %}<li><a href="{{ url_for('workspace.admin_users') }}">{{ t('ws.staff') }}</a></li>{% endif %}

@@ -18,3 +18,5 @@ gunicorn==23.0.0
 # Database and rate-limit drivers used by the documented production settings (.env.example).
 psycopg[binary]==3.2.13
 redis==6.4.0
+# Strips location and other metadata from photos attached to stories.
+pillow==13.0.0

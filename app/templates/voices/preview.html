@@ -1,0 +1,56 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, errors %}
+{% block title %}{{ t('voices.preview_title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="story-page">
+  <p class="eyebrow">{{ t('voices.preview_eyebrow') }}</p>
+  <h1>{{ t('voices.preview_heading') }}</h1>
+  <p class="lead">{{ t('voices.preview_lead') }}</p>
+
+  {% if warnings %}
+  <div class="notice notice--warn" role="alert">
+    <h2>{{ t('voices.warn_title') }}</h2>
+    <p>{{ t('voices.warn_text') }}</p>
+    <ul>{% for kind in warnings %}<li>{{ t('redaction.kind_' ~ kind) }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  <div class="card story-body">
+    <div class="story-meta mb-3">
+      <span class="avatar" aria-hidden="true">{{ ((form.chosen_name.data if form.display_mode.data == 'chosen_name' else (current_user.name if form.display_mode.data == 'account_name' and current_user.is_authenticated else '')) or '•')[:1] }}</span>
+      <span><strong>{% if form.display_mode.data == 'chosen_name' %}{{ form.chosen_name.data }}{% elif form.display_mode.data == 'account_name' and current_user.is_authenticated %}{{ current_user.name }}{% else %}{{ t('voices.anonymous') }}{% endif %}</strong><br>{{ t('story_topic.' ~ form.topic.data) }}</span>
+    </div>
+    <h2 class="mt-0">{{ form.title.data or t('voices.untitled') }}</h2>
+    {% if form.content_warning.data != 'none' %}<p class="tags"><span class="tag tag--warm">{{ t('voices.cw_prefix') }}: {{ t('story_warning.' ~ form.content_warning.data) }}</span></p>{% endif %}
+    {% for para in (form.body.data or '').split('\n\n') %}<p>{{ para }}</p>{% endfor %}
+    <p class="tags mb-0"><span class="tag">{{ t('voices.wants') }}: {{ t('story_support.' ~ form.support_wanted.data) }}</span><span class="tag tag--lilac">{{ t('story_replies.' ~ form.reply_mode.data) }}</span></p>
+  </div>
+
+  <form method="post" action="{{ url_for('voices.submit') }}" enctype="multipart/form-data" class="composer mt-4" novalidate>
+    {{ form.csrf_token }}
+    {% for f in (form.title, form.body, form.topic, form.display_mode, form.chosen_name, form.support_wanted, form.reply_mode, form.content_warning) %}
+    <input type="hidden" name="{{ f.name }}" value="{{ f.data or '' }}">
+    {% endfor %}
+    <h2 class="mt-0">{{ t('voices.photos_title') }}</h2>
+    <p class="hint">{{ t('voices.photos_help', n=config['STORY_MAX_IMAGES']|bn_digits, mb=(config['STORY_IMAGE_MAX_BYTES'] // 1048576)|bn_digits, total=(config['MAX_CONTENT_LENGTH'] // 1048576)|bn_digits) }}</p>
+    <div class="field {% if form.images.errors %}field--error{% endif %}">
+      <label for="images">{{ t(form.images.label.text) }}</label>
+      <input type="file" name="images" id="images" multiple accept="image/jpeg,image/png,image/webp">
+      {{ errors(form.images) }}
+    </div>
+    {{ field(form.image_description, help='voices.image_description_help', maxlength=300) }}
+    <p class="not-yet">{{ t('voices.av_not_yet') }}</p>
+
+    <div class="field field--check {% if form.reviewed.errors %}field--error{% endif %}">
+      <label class="check">{{ form.reviewed() }}<span>{{ t(form.reviewed.label.text) }}</span></label>
+      {{ errors(form.reviewed) }}
+    </div>
+    <p class="small muted">{{ t('voices.submit_note') }}</p>
+    <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ t('voices.submit_button') }}</button>
+      <button type="submit" class="btn btn-ghost" formaction="{{ url_for('voices.new') }}" formnovalidate name="action" value="edit">{{ t('voices.edit_button') }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

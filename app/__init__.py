@@ -118,12 +118,14 @@ def _register_blueprints(app: Flask) -> None:
     from app.routes.report import report_bp
     from app.routes.support import support_bp
     from app.routes.track import track_bp
+    from app.routes.voices import voices_bp
     from app.routes.workspace import workspace_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(report_bp, url_prefix="/report")
     app.register_blueprint(track_bp, url_prefix="/track")
+    app.register_blueprint(voices_bp, url_prefix="/voices")
     app.register_blueprint(support_bp, url_prefix="/support")
     app.register_blueprint(workspace_bp, url_prefix="/workspace")
     app.register_blueprint(legacy_bp)
@@ -165,6 +167,33 @@ def _register_errors(app: Flask) -> None:
         return _render("errors/500.html", 500)
 
 
+_BN_DIGITS = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+_BN_MONTHS = (
+    "জানুয়ারি",
+    "ফেব্রুয়ারি",
+    "মার্চ",
+    "এপ্রিল",
+    "মে",
+    "জুন",
+    "জুলাই",
+    "আগস্ট",
+    "সেপ্টেম্বর",
+    "অক্টোবর",
+    "নভেম্বর",
+    "ডিসেম্বর",
+)
+
+
+def _format_date(value: datetime, *, with_time: bool) -> str:
+    """'23 Oct 2026' in English, '২৩ অক্টোবর ২০২৬' in Bangla, with ', 14:05' when asked."""
+    if get_locale() == "bn":
+        text = f"{value.day} {_BN_MONTHS[value.month - 1]} {value.year}"
+        if with_time:
+            text += value.strftime(", %H:%M")
+        return text.translate(_BN_DIGITS)
+    return value.strftime("%d %b %Y, %H:%M" if with_time else "%d %b %Y")
+
+
 def _register_context(app: Flask) -> None:
     @app.context_processor
     def inject_globals():
@@ -186,16 +215,16 @@ def _register_context(app: Flask) -> None:
     app.jinja_env.globals["checked_on"] = lambda: CHECKED_ON.get(get_locale(), CHECKED_ON["en"])
 
     @app.template_filter("dt")
-    def format_dt(value, fmt: str = "%d %b %Y, %H:%M"):
+    def format_dt(value):
         if not value:
             return ""
-        return value.strftime(fmt) + " UTC"
+        return _format_date(value, with_time=True) + " UTC"
 
     @app.template_filter("d")
     def format_d(value):
         if not value:
             return ""
-        return value.strftime("%d %b %Y")
+        return _format_date(value, with_time=False)
 
     @app.template_filter("tkey")
     def translate_key(value, prefix: str = ""):
@@ -205,8 +234,7 @@ def _register_context(app: Flask) -> None:
     def bn_digits(value):
         if get_locale() != "bn":
             return value
-        table = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
-        return str(value).translate(table)
+        return str(value).translate(_BN_DIGITS)
 
     @app.before_request
     def _touch_locale():
@@ -220,7 +248,7 @@ def _register_security_headers(app: Flask) -> None:
         "form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; manifest-src 'self'; "
         "worker-src 'self'"
     )
-    private_prefixes = ("/workspace", "/track", "/support/chat", "/auth", "/report")
+    private_prefixes = ("/workspace", "/track", "/support/chat", "/auth", "/report", "/voices/new", "/voices/submit", "/voices/manage")
 
     @app.after_request
     def set_headers(response):
@@ -325,5 +353,8 @@ def _register_cli(app: Flask) -> None:
         from app.services.drafts import purge_expired
 
         click.echo(f"removed {purge_expired()} expired report drafts")
+        from app.services.stories import purge_rejected
+
+        click.echo(f"removed {purge_rejected()} stories and replies turned down more than 30 days ago")
         due = Case.query.filter(Case.retention_review_at.isnot(None), Case.retention_review_at <= date.today()).count()
         click.echo(f"closed {n} abandoned conversations; {due} cases due for retention review")

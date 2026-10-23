@@ -16,7 +16,7 @@ from sqlalchemy import create_engine, inspect, text  # noqa: E402
 
 from config import normalise_database_url  # noqa: E402
 
-EXPECTED_HEAD = "c3cee4c88fb2"
+EXPECTED_HEAD = "f92c92f789d8"
 NEW_TABLES = ("report_drafts", "report_draft_files")
 COUNT_SQL = {
     "users": "SELECT COUNT(*) FROM users",

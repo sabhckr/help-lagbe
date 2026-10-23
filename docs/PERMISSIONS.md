@@ -86,6 +86,7 @@ Generated from `app/permissions.py` (run `python scripts/gen_permissions_doc.py`
 | `social.approve` |  |  |  |  |  | ✓ |  |  |
 | `social.confirm_posted` |  |  |  |  |  | ✓ |  |  |
 | `social.draft` |  |  |  |  |  | ✓ |  |  |
+| `story.moderate` |  |  |  |  | ✓ |  |  | ✓ |
 | `support.chat` |  |  |  | ✓ | ✓ |  |  |  |
 | `support.escalate` |  |  |  | ✓ | ✓ |  |  |  |
 | `support.presence` |  |  |  | ✓ | ✓ |  |  |  |
@@ -99,6 +100,8 @@ Generated from `app/permissions.py` (run `python scripts/gen_permissions_doc.py`
 |---|---|
 | `harassment` | support |
 | `threats_blackmail` | support |
+| `stalking` | support |
+| `hate_incident` | support |
 | `abuse_violence` | support |
 | `corruption_exploitation` | editorial |
 | `online_harm` | cyber |

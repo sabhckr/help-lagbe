@@ -1,0 +1,64 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field, errors %}
+{% block title %}{{ t('voices.new_title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="compose-layout">
+  <aside class="compose-layout__aside">
+    <p class="eyebrow">{{ t('voices.new_eyebrow') }}</p>
+    <h1>{{ t('voices.new_heading') }}</h1>
+    <p class="muted">{{ t('voices.new_lead') }}</p>
+    <ul class="privacy-points">
+      {% for n in (1, 2, 3, 4, 5) %}<li>{{ t('voices.point' ~ n) }}</li>{% endfor %}
+    </ul>
+    <p class="small muted mt-3">{{ t('voices.not_therapy') }}</p>
+  </aside>
+
+  <form method="post" action="{{ url_for('voices.new') }}" class="composer" novalidate>
+    {{ form.csrf_token }}
+    <h2 class="mt-0">{{ t('voices.compose_title') }}</h2>
+    <p class="hint">{{ t('voices.compose_hint') }}</p>
+
+    <fieldset class="field {% if form.topic.errors %}field--error{% endif %}">
+      <legend>{{ t(form.topic.label.text) }}</legend>
+      <div class="choice-cards">
+        {% for sub in form.topic %}
+        <label class="choice">{{ sub }}<span><span class="choice__title">{{ t(sub.label.text) }}</span><span class="choice__desc">{{ t(sub.label.text ~ '_desc') }}</span></span></label>
+        {% endfor %}
+      </div>
+      {{ errors(form.topic) }}
+    </fieldset>
+
+    {{ field(form.title, help='voices.title_help', placeholder='voices.title_placeholder', maxlength=120) }}
+    {{ field(form.body, help='voices.body_help', placeholder='voices.body_placeholder', rows=10, maxlength=10000, required=True) }}
+
+    <fieldset class="field {% if form.display_mode.errors %}field--error{% endif %}">
+      <legend>{{ t(form.display_mode.label.text) }}</legend>
+      <p class="hint">{{ t('voices.display_hint') }}</p>
+      <div class="choices">
+        {% for sub in form.display_mode %}{% if sub.data != 'account_name' or current_user.is_authenticated %}
+        <label class="choice">{{ sub }}<span><span class="choice__title">{{ t(sub.label.text) }}</span><span class="choice__desc">{{ t(sub.label.text ~ '_desc') }}</span></span></label>
+        {% endif %}{% endfor %}
+      </div>
+      {{ errors(form.display_mode) }}
+    </fieldset>
+    {{ field(form.chosen_name, help='voices.chosen_name_help', maxlength=60) }}
+
+    {{ field(form.support_wanted) }}
+
+    <fieldset class="field">
+      <legend>{{ t(form.reply_mode.label.text) }}</legend>
+      <div class="choices">
+        {% for sub in form.reply_mode %}
+        <label class="choice">{{ sub }}<span><span class="choice__title">{{ t(sub.label.text) }}</span><span class="choice__desc">{{ t(sub.label.text ~ '_desc') }}</span></span></label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    {{ field(form.content_warning, help='voices.warning_help') }}
+
+    <p class="not-yet">{{ t('voices.media_next_step') }}</p>
+    <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+    <div class="form-actions"><button type="submit" name="action" value="preview" class="btn btn-primary">{{ t('voices.preview_button') }}</button></div>
+  </form>
+</div>
+{% endblock %}

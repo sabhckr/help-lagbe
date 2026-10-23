@@ -25,6 +25,7 @@ from app.models.publication import (
     SocialDraft,
 )
 from app.models.settings import DepartmentConfig, EmergencyContact, SiteSetting
+from app.models.story import Story, StoryImage, StoryReply
 from app.models.support import AgentPresence, SupportConversation, SupportMessage
 from app.models.user import User
 
@@ -55,6 +56,9 @@ __all__ = [
     "DepartmentConfig",
     "EmergencyContact",
     "SiteSetting",
+    "Story",
+    "StoryImage",
+    "StoryReply",
     "AgentPresence",
     "SupportConversation",
     "SupportMessage",

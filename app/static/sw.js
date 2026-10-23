@@ -1,6 +1,6 @@
 /* Minimal offline support: cache the shell + public pages visited; never touch private routes. */
-const VERSION = "hl-v2";
-const PRIVATE = ["/workspace", "/track", "/support", "/auth", "/report", "/my-reports", "/requests", "/quick-exit"];
+const VERSION = "hl-v3";
+const PRIVATE = ["/workspace", "/track", "/support", "/auth", "/report", "/my-reports", "/requests", "/quick-exit", "/voices/new", "/voices/submit", "/voices/manage"];
 const SHELL = ["/offline", "/static/css/app.css", "/static/js/app.js", "/static/img/logo.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

@@ -29,6 +29,7 @@ from app.models.case import (
 from app.models.legal import LEGAL_STATUSES
 from app.models.moderation import FLAG_REASONS, FLAG_TARGETS
 from app.models.publication import PUBLICATION_KINDS, PUBLICATION_LABELS, REQUEST_TYPES, SOCIAL_CHANNELS
+from app.models.story import STORY_DISPLAY_MODES, STORY_REPLY_MODES, STORY_SUPPORT, STORY_TOPICS, STORY_WARNINGS
 
 REQ = "validation.required"
 EMAIL_RE = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
@@ -387,3 +388,50 @@ class SettingsForm(FlaskForm):
 
 class EmptyForm(FlaskForm):
     """CSRF-only form for single-button actions."""
+
+
+# ---- Community stories ----------------------------------------------------------------------
+STORY_REPORT_REASONS = ("coordinated_harassment", "threat", "doxxing", "prohibited_material", "spam", "other")
+
+
+class StoryForm(FlaskForm):
+    title = StringField("story.f_title", validators=[Optional(), Length(max=120, message="story.error_title_length")])
+    body = TextAreaField("story.f_body", validators=[DataRequired(REQ), Length(min=20, max=10000, message="story.error_body_length")])
+    topic = RadioField("story.f_topic", choices=choices("story_topic.", STORY_TOPICS), validators=[DataRequired("story.error_topic")])
+    display_mode = RadioField("story.f_display", choices=choices("story_display.", STORY_DISPLAY_MODES), default="anonymous")
+    chosen_name = StringField("story.f_chosen_name", validators=[Optional(), Length(max=60, message="story.error_name_length")])
+    support_wanted = SelectField("story.f_support", choices=choices("story_support.", STORY_SUPPORT), default="listen")
+    reply_mode = RadioField("story.f_replies", choices=choices("story_replies.", STORY_REPLY_MODES), default="moderated")
+    content_warning = SelectField("story.f_warning", choices=choices("story_warning.", STORY_WARNINGS), default="none")
+    image_description = StringField(
+        "story.f_image_description", validators=[Optional(), Length(max=300, message="story.error_description_length")]
+    )
+    images = MultipleFileField("story.f_images")
+    reviewed = BooleanField("story.f_reviewed")
+    website = StringField("website")  # honeypot: people never see or fill this
+
+
+class StoryReplyForm(FlaskForm):
+    body = TextAreaField("story.reply_body", validators=[DataRequired(REQ), Length(min=2, max=2000, message="story.error_reply_length")])
+    display_name = StringField("story.reply_name", validators=[Optional(), Length(max=60, message="story.error_name_length")])
+    website = StringField("website")
+
+
+class StoryContentReportForm(FlaskForm):
+    target = SelectField("story.report_target", choices=[("story", "story"), ("story_reply", "story_reply")])
+    target_id = IntegerField("story.report_target", validators=[DataRequired(REQ), NumberRange(min=1)])
+    reason = SelectField("story.report_reason", choices=choices("story_report_reason.", STORY_REPORT_REASONS))
+    notes = TextAreaField("story.report_notes", validators=[Optional(), Length(max=1000, message="story.error_reply_length")])
+
+
+class StoryManageForm(FlaskForm):
+    reference = StringField("story.manage_reference", validators=[DataRequired(REQ), Length(max=20)])
+    code = StringField("story.manage_code", validators=[DataRequired(REQ), Length(max=40)])
+
+
+class StoryDecisionForm(FlaskForm):
+    decision = SelectField(
+        "story.ws_decision",
+        choices=[("publish", "story.ws_publish"), ("reject", "story.ws_reject"), ("take_down", "story.ws_take_down")],
+    )
+    reason = TextAreaField("story.ws_reason", validators=[Optional(), Length(max=2000)])

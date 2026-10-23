@@ -1,0 +1,30 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import art %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block title %}{{ t('voices.received_title_tag') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <div class="received-head">
+    <div>
+      <p class="eyebrow">{{ t('voices.received_eyebrow') }}</p>
+      <h1>{{ t('voices.received_heading') }}</h1>
+    </div>
+    {{ art('report-received', class='received-head__art') }}
+  </div>
+  <p class="lead">{{ t('voices.received_lead') }}</p>
+
+  <h2>{{ t('voices.received_keep_title') }}</h2>
+  <p>{{ t('voices.received_keep_text') }}</p>
+  <dl class="reference-box">
+    <div><dt>{{ t('story.manage_reference') }}</dt><dd class="reference-value">{{ story.reference }}</dd></div>
+    <div><dt>{{ t('story.manage_code') }}</dt><dd class="reference-value">{{ code }}</dd></div>
+  </dl>
+  <div class="cluster mt-3"><button type="button" class="btn btn-ghost btn-sm" data-print>{{ t('ui.print') }}</button></div>
+
+  <h2>{{ t('voices.received_next_title') }}</h2>
+  <ol class="steps">
+    {% for n in (1, 2, 3) %}<li>{{ t('voices.received_next' ~ n) }}</li>{% endfor %}
+  </ol>
+  <p class="mt-4"><a class="btn btn-primary" href="{{ url_for('voices.index') }}">{{ t('home.cta_read') }}</a></p>
+</div>
+{% endblock %}

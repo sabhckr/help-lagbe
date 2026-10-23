@@ -1,0 +1,17 @@
+<div class="acc-grid">
+  <article class="acc-card"><div class="acc-card__icon" aria-hidden="true">◌</div><h3>{{ t('acc.card1_title') }}</h3><p>{{ t('acc.card1_text') }}</p></article>
+  <article class="acc-card"><div class="acc-card__icon" aria-hidden="true">✳</div><h3>{{ t('acc.card2_title') }}</h3><p>{{ t('acc.card2_text') }}</p></article>
+  <article class="acc-card"><div class="acc-card__icon" aria-hidden="true">♡</div><h3>{{ t('acc.card3_title') }}</h3><p>{{ t('acc.card3_text') }}</p></article>
+</div>
+<div class="acc-flow">
+  <div>
+    <p class="eyebrow">{{ t('acc.flow_eyebrow') }}</p>
+    <h3 class="mt-0">{{ t('acc.flow_title') }}</h3>
+    <p class="muted mb-0">{{ t('acc.flow_text') }}</p>
+  </div>
+  <ol class="review-steps" aria-label="{{ t('acc.flow_steps_label') }}">
+    {% for n in (1, 2, 3) %}
+    <li><span class="review-steps__no">{{ n|bn_digits }}</span><span><strong>{{ t('acc.step' ~ n ~ '_title') }}</strong><span class="small">{{ t('acc.step' ~ n ~ '_text') }}</span></span></li>
+    {% endfor %}
+  </ol>
+</div>

@@ -1,0 +1,28 @@
+{% extends "layouts/workspace.html" %}
+{% from "macros/ui.html" import empty %}
+{% block title %}{{ t('ws.stories') }} · {{ t('site.name') }}{% endblock %}
+{% block workspace %}
+<div class="page-head"><div><h1>{{ t('ws.stories') }}</h1><p class="muted">{{ t('story.ws_help') }}</p></div></div>
+<div class="cluster mb-3">
+  {% for s in statuses %}<a class="chip" href="{{ url_for('workspace.stories', status=s) }}" {% if status == s %}aria-current="true"{% endif %}>{{ t('story_status.' ~ s) }}{% if s == 'pending' %} ({{ counts.stories|bn_digits }}){% endif %}</a>{% endfor %}
+</div>
+
+{% for s in items %}
+<div class="card {% if s.content_warning != 'none' %}card--accent{% endif %}">
+  <div class="cluster"><span class="badge badge-muted">{{ s.reference }}</span><span class="badge">{{ t('story_topic.' ~ s.topic) }}</span>{% if s.content_warning != 'none' %}<span class="badge badge-warn">{{ t('story_warning.' ~ s.content_warning) }}</span>{% endif %}{% if s.images %}<span class="badge badge-muted">{{ t('voices.has_photos', n=s.images|length|bn_digits) }}</span>{% endif %}<span class="small muted">{{ s.created_at|dt }}</span></div>
+  <p class="my-1"><strong>{{ s.title or t('voices.untitled') }}</strong> — {{ s.body|truncate(160) }}</p>
+  <a class="btn btn-secondary btn-sm" href="{{ url_for('workspace.story_review', story_id=s.id) }}">{{ t('story.ws_review') }}</a>
+</div>
+{% else %}{{ empty('story.ws_none') }}{% endfor %}
+
+{% if status == 'pending' %}
+<h2>{{ t('story.ws_replies_title') }} ({{ counts.replies|bn_digits }})</h2>
+{% for r in replies %}
+<div class="card" id="reply-{{ r.id }}">
+  <div class="small muted">{{ t('story.ws_reply_on') }} <a href="{{ url_for('workspace.story_review', story_id=r.story_id) }}">{{ r.story.reference }}</a> · {{ r.display_name or t('voices.anonymous') }} · {{ r.created_at|dt }}</div>
+  <p class="my-1 pre-line">{{ r.body }}</p>
+  {% include "workspace/stories/_reply_decision.html" %}
+</div>
+{% else %}<p class="muted">{{ t('story.ws_no_replies') }}</p>{% endfor %}
+{% endif %}
+{% endblock %}

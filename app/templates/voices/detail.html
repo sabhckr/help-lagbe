@@ -1,0 +1,78 @@
+{% extends "layouts/base.html" %}
+{% from "macros/forms.html" import field %}
+{% block title %}{{ story.title or t('voices.untitled') }} · {{ t('site.name') }}{% endblock %}
+{% block content %}
+<article class="story-page story-body" aria-labelledby="story-title">
+  <p><a href="{{ url_for('voices.index') }}">← {{ t('voices.back') }}</a></p>
+  <div class="story-meta mb-3">
+    <span class="avatar" aria-hidden="true">{{ (story.display_name or '•')[:1] }}</span>
+    <span><strong>{{ story.display_name or t('voices.anonymous') }}</strong><br>{{ t('story_topic.' ~ story.topic) }} · {{ story.published_at|d }} · {{ t('voices.minutes', n=story.reading_minutes()|bn_digits) }}</span>
+  </div>
+  <h1 id="story-title">{{ story.title or t('voices.untitled') }}</h1>
+  <p class="tags"><span class="tag">{{ t('voices.wants') }}: {{ t('story_support.' ~ story.support_wanted) }}</span></p>
+
+  {% set body %}
+    {% for para in story.body.split('\n\n') %}<p>{{ para }}</p>{% endfor %}
+    {% for img in story.images %}
+    <figure class="story-figure"><img src="{{ url_for('voices.image', image_id=img.id) }}" alt="{{ story.image_description or t('voices.photo_alt') }}" width="{{ img.width }}" height="{{ img.height }}" loading="lazy"></figure>
+    {% endfor %}
+  {% endset %}
+  {% if story.content_warning != 'none' %}
+  <details class="cw">
+    <summary><span>{{ t('voices.cw_intro', topic=t('story_warning.' ~ story.content_warning)) }}</span><span class="cw__action">{{ t('voices.cw_open') }}</span></summary>
+    <div class="cw__inner">{{ body }}</div>
+  </details>
+  {% else %}{{ body }}{% endif %}
+</article>
+
+<section class="story-page mt-5" id="support" aria-labelledby="support-title">
+  <h2 id="support-title">{{ t('voices.react_title') }}</h2>
+  <p class="muted">{{ t('voices.react_help') }}</p>
+  <div class="reactions">
+    {% for kind in ('hear_you', 'not_alone', 'thank_you') %}
+    <form method="post" action="{{ url_for('voices.react', reference=story.reference) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="kind" value="{{ kind }}">
+      <button type="submit" class="reaction" aria-pressed="{{ 'true' if kind in reacted else 'false' }}">♡ {{ t('reaction.' ~ kind) }} <b>{{ story[kind]|bn_digits }}</b></button>
+    </form>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="story-page mt-5" id="replies" aria-labelledby="replies-title">
+  <h2 id="replies-title">{{ t('voices.replies_title') }}</h2>
+  {% for r in story.published_replies %}
+  <div class="reply" id="reply-{{ r.id }}">
+    <p class="reply__meta">{{ r.display_name or t('voices.anonymous') }} · {{ r.created_at|d }}</p>
+    <p class="mb-1 pre-line">{{ r.body }}</p>
+    <details><summary class="small muted">{{ t('voices.report_reply') }}</summary>
+      {% with target='story_reply', target_id=r.id %}{% include "voices/_report_form.html" %}{% endwith %}
+    </details>
+  </div>
+  {% else %}<p class="muted">{{ t('voices.no_replies') }}</p>{% endfor %}
+
+  {% if story.reply_mode == 'moderated' %}
+  <form method="post" action="{{ url_for('voices.reply', reference=story.reference) }}" class="card mt-3" novalidate>
+    {{ reply_form.hidden_tag() }}
+    <h3 class="mt-0">{{ t('voices.reply_form_title') }}</h3>
+    <p class="hint">{{ t('voices.reply_form_help') }}</p>
+    {{ field(reply_form.body, rows=4, maxlength=2000, required=True) }}
+    {{ field(reply_form.display_name, help='voices.reply_name_help', maxlength=60) }}
+    <div class="hp" aria-hidden="true"><label for="reply-website">Website</label><input id="reply-website" name="website" tabindex="-1" autocomplete="off"></div>
+    <button type="submit" class="btn btn-primary">{{ t('voices.reply_send') }}</button>
+  </form>
+  {% else %}
+  <p class="notice notice--info">{{ t('voices.replies_off_note') }}</p>
+  {% endif %}
+</section>
+
+<section class="story-page mt-5" aria-labelledby="report-title">
+  <details class="panel-details">
+    <summary id="report-title">{{ t('voices.report_story') }}</summary>
+    <div class="panel-body">
+      <p class="hint">{{ t('voices.report_help') }}</p>
+      {% with target='story', target_id=story.id %}{% include "voices/_report_form.html" %}{% endwith %}
+    </div>
+  </details>
+  <p class="small muted">{{ t('voices.crisis_note') }} <a href="{{ url_for('public.help_page') }}#now">{{ t('nav.get_help') }}</a></p>
+</section>
+{% endblock %}

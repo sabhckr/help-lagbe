@@ -24,6 +24,8 @@ from app.i18n import COOKIE_NAME
 from app.models.case import Case
 from app.models.publication import STAGE_PUBLISHED, Correction, Publication, PublicRequest
 from app.models.settings import DepartmentConfig, EmergencyContact, SiteSetting
+from app.models.story import PUBLISHED as STORY_PUBLISHED
+from app.models.story import STORY_TOPICS, Story
 from app.services import audit
 from app.services.publication import new_request_reference
 from app.services.security import is_safe_url
@@ -54,9 +56,12 @@ def _published():
 @public_bp.route("/")
 def home():
     latest = _published().limit(3).all()
+    stories = Story.query.filter_by(status=STORY_PUBLISHED).order_by(Story.published_at.desc()).limit(3).all()
     return render_template(
         "site/home.html",
         latest=latest,
+        stories=stories,
+        topics=STORY_TOPICS,
         availability=availability(),
         announcement=_setting("announcement_" + (request.cookies.get(COOKIE_NAME) or current_app.config["DEFAULT_LANGUAGE"])),
     )
@@ -101,6 +106,11 @@ def story(slug: str):
 @public_bp.route("/about")
 def about():
     return render_template("site/about.html")
+
+
+@public_bp.route("/accountability")
+def accountability():
+    return render_template("site/accountability.html", latest=_published().limit(3).all())
 
 
 @public_bp.route("/safety")

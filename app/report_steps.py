@@ -39,6 +39,8 @@ BENGALI_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
 CATEGORY_TITLES = {
     "harassment": "Harassment or bullying",
     "threats_blackmail": "Threats or blackmail",
+    "stalking": "Stalking or unwanted following",
+    "hate_incident": "Racism or hate incident",
     "abuse_violence": "Abuse or violence",
     "corruption_exploitation": "Corruption or exploitation",
     "online_harm": "Online harm",

@@ -64,6 +64,8 @@ CATEGORY_DEPARTMENT = {
     # Eight plain-language groups shown to reporters. Staff can re-route any case.
     "harassment": DEPT_SUPPORT,  # bullying, eve-teasing, street or workplace harassment
     "threats_blackmail": DEPT_SUPPORT,  # threats, coercion, blackmail
+    "stalking": DEPT_SUPPORT,  # following, watching, repeated unwanted contact, online or offline
+    "hate_incident": DEPT_SUPPORT,  # racism, communal or other hate aimed at who someone is
     "abuse_violence": DEPT_SUPPORT,  # physical, sexual or domestic abuse
     "corruption_exploitation": DEPT_EDITORIAL,  # bribery, misuse of office, exploitation
     "online_harm": DEPT_CYBER,  # hacked accounts, online abuse, private images
@@ -128,6 +130,7 @@ MOD_QUEUE = "moderation.queue"
 MOD_ACT = "moderation.act"
 MOD_APPEALS = "moderation.appeals"
 MOD_FLAG = "moderation.flag"  # any staff can raise a flag
+STORY_MODERATE = "story.moderate"  # approve, reject or take down community stories and replies
 # Admin & audit
 ADMIN_USERS = "admin.users"
 ADMIN_ROLES = "admin.roles"
@@ -237,6 +240,7 @@ ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
             SUPPORT_SUPERVISE,
             SUPPORT_PRESENCE,
             PUB_SAFETY_REVIEW,
+            STORY_MODERATE,
         }
     ),
     ROLE_EDITORIAL: frozenset(
@@ -286,6 +290,7 @@ ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
             MOD_APPEALS,
             PUB_WITHDRAW,
             CASE_APPEAL_HANDLE,
+            STORY_MODERATE,
         }
     ),
 }

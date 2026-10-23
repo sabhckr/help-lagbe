@@ -9,7 +9,7 @@ from app.extensions import Model
 from app.models.base import utcnow
 
 FLAG_REASONS = ("threat", "doxxing", "spam", "coordinated_harassment", "prohibited_material", "fabrication_suspected", "other")
-FLAG_TARGETS = ("case", "publication", "conversation", "public_request", "user")
+FLAG_TARGETS = ("case", "publication", "conversation", "public_request", "user", "story", "story_reply")
 FLAG_STATUSES = ("open", "actioned", "dismissed")
 
 

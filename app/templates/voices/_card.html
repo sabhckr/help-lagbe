@@ -1,0 +1,14 @@
+{# One story in a list. Expects `s`, a published Story. A content warning hides the excerpt. #}
+<a class="story-card" href="{{ url_for('voices.detail', reference=s.reference) }}">
+  <span class="story-meta">
+    <span class="avatar" aria-hidden="true">{{ (s.display_name or '•')[:1] }}</span>
+    <span><strong class="link-plain">{{ s.display_name or t('voices.anonymous') }}</strong><br>{{ t('story_topic.' ~ s.topic) }} · {{ t('voices.minutes', n=s.reading_minutes()|bn_digits) }}</span>
+  </span>
+  {% if s.title %}<span class="story-card__title">{{ s.title }}</span>{% endif %}
+  {% if s.content_warning != 'none' %}
+    <span class="tags"><span class="tag tag--warm">{{ t('voices.cw_prefix') }}: {{ t('story_warning.' ~ s.content_warning) }}</span></span>
+  {% else %}
+    <span class="story-card__excerpt">{{ s.body|truncate(220) }}</span>
+  {% endif %}
+  <span class="tags"><span class="tag">{{ t('story_support.' ~ s.support_wanted) }}</span>{% if s.images %}<span class="tag tag--lilac">{{ t('voices.has_photos', n=s.images|length|bn_digits) }}</span>{% endif %}</span>
+</a>
