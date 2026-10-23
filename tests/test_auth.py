@@ -133,14 +133,15 @@ def test_inactive_user_cannot_log_in(client):
 def test_change_password_requires_current(client):
     login(client, "reporter")
     r = client.post(
-        "/auth/password", data={"current": "wrong-current-pass", "password": "new-long-password-9", "password2": "new-long-password-9"}
+        "/auth/password",
+        data={"current": "wrong-current-pass", "password": "quiet-lantern-harbour-9", "password2": "quiet-lantern-harbour-9"},
     )
     assert b"not correct" in r.data
     r = client.post(
-        "/auth/password", data={"current": DEMO_PASSWORD, "password": "new-long-password-9", "password2": "new-long-password-9"}
+        "/auth/password", data={"current": DEMO_PASSWORD, "password": "quiet-lantern-harbour-9", "password2": "quiet-lantern-harbour-9"}
     )
     assert r.status_code == 302
-    assert user_by_role("reporter").check_password("new-long-password-9")
+    assert user_by_role("reporter").check_password("quiet-lantern-harbour-9")
 
 
 def test_signed_in_people_can_sign_out_from_any_page(client):

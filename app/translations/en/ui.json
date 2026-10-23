@@ -77,7 +77,7 @@
     "form_errors": "Please check the highlighted fields.",
     "mfa_code": "Enter the 6-digit code from your authenticator app.",
     "password_length": "Use at least 12 characters.",
-    "password_common": "This password is too common or too repetitive.",
+    "password_common": "This password is too easy to guess. Avoid common words and place names, even with numbers added, and simple runs like 1234 or abcd.",
     "password_contains_email": "The password must not contain your email address.",
     "password_contains_name": "The password must not contain your name.",
     "password_match": "The two passwords do not match.",

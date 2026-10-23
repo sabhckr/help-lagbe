@@ -11,7 +11,7 @@ def test_admin_creates_staff_with_policy_and_temp_password(client):
     assert r.status_code == 200 and User.query.filter_by(email="agent9@helplagbe.local").first() is None
     r = client.post(
         "/workspace/admin/users",
-        data={"name": "New Agent", "email": "agent9@helplagbe.local", "role": "support", "password": "a-strong-temp-password-7"},
+        data={"name": "New Agent", "email": "agent9@helplagbe.local", "role": "support", "password": "river-mango-temp-key-7"},
     )
     assert r.status_code == 302
     user = User.query.filter_by(email="agent9@helplagbe.local").one()

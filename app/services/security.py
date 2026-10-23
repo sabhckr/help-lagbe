@@ -22,6 +22,48 @@ _COMMON_PASSWORDS = {
     "letmein12345",
     "iloveyou1234",
 }
+# Words people build passwords around. A password that is one of these with digits or symbols
+# around it ("Password2026!", "dhaka12345678") is among the first things an attacker tries.
+_COMMON_WORDS = {
+    "password",
+    "passw0rd",
+    "qwerty",
+    "qwertyuiop",
+    "asdfghjkl",
+    "letmein",
+    "welcome",
+    "admin",
+    "administrator",
+    "iloveyou",
+    "secret",
+    "changeme",
+    "default",
+    "login",
+    "monkey",
+    "dragon",
+    "sunshine",
+    "princess",
+    "football",
+    "cricket",
+    "helplagbe",
+    "bangladesh",
+    "dhaka",
+}
+_SEQUENCES = ("abcdefghijklmnopqrstuvwxyz", "qwertyuiopasdfghjklzxcvbnm", "01234567890", "09876543210")
+
+
+def _is_guessable(password: str) -> bool:
+    lowered = password.lower()
+    core = re.sub(r"^[\W\d_]+|[\W\d_]+$", "", lowered)
+    if lowered in _COMMON_PASSWORDS or core in _COMMON_PASSWORDS or core in _COMMON_WORDS:
+        return True
+    if "password" in lowered or "passw0rd" in lowered:
+        return True
+    # Only digits, or almost no variety ("111111111111", "abababababab", "!!!!@@@@####").
+    if lowered.isdigit() or len(set(lowered)) < 5:
+        return True
+    # A straight run along the alphabet or the keyboard.
+    return any(lowered in sequence for sequence in _SEQUENCES)
 
 
 def is_safe_url(target: str | None) -> bool:
@@ -46,7 +88,7 @@ def password_problems(password: str, *, email: str = "", name: str = "") -> list
     min_len = current_app.config.get("PASSWORD_MIN_LENGTH", 12)
     if len(password) < min_len:
         problems.append("validation.password_length")
-    if password.lower() in _COMMON_PASSWORDS or re.fullmatch(r"(.)\1{7,}", password):
+    if _is_guessable(password):
         problems.append("validation.password_common")
     local = (email or "").split("@")[0].lower()
     if local and len(local) >= 4 and local in password.lower():
