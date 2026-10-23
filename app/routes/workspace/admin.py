@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import csv
 import io
-import os
 from datetime import date
 
 from flask import Response, abort, current_app, flash, redirect, render_template, request, url_for
@@ -28,6 +27,7 @@ from app.i18n import translate as t
 from app.models.audit import SENSITIVE_EVENTS, AuditEvent
 from app.models.base import utcnow
 from app.models.case import Case
+from app.models.evidence import Evidence
 from app.models.settings import DepartmentConfig, EmergencyContact, SiteSetting
 from app.models.user import User
 from app.routes.workspace import any_permission, staff_required, workspace_bp
@@ -284,8 +284,8 @@ def admin_health():
         checks.append(("database", True, cfg["SQLALCHEMY_DATABASE_URI"].split("://", 1)[0]))
     except Exception as exc:  # noqa: BLE001
         checks.append(("database", False, exc.__class__.__name__))
-    ev_dir = cfg.get("EVIDENCE_DIR") or os.path.join(current_app.instance_path, "evidence")
-    checks.append(("evidence_dir", os.path.isdir(ev_dir) and os.access(ev_dir, os.W_OK), ev_dir if os.path.isdir(ev_dir) else "missing"))
+    legacy = Evidence.query.filter(Evidence.data_enc.is_(None)).count()
+    checks.append(("evidence_storage", True, "database, encrypted" + (f"; {legacy} older file(s) still on disk" if legacy else "")))
     checks.append(
         ("malware_scanner", bool(cfg.get("CLAMD_SOCKET")), cfg.get("CLAMD_SOCKET") or "not configured — uploads are marked 'not scanned'")
     )

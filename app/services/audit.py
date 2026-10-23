@@ -36,7 +36,11 @@ def record(
     details: dict[str, Any] | None = None,
     commit: bool = False,
 ) -> AuditEvent:
-    """Write an audit event. `details` must never contain narratives, identities or message bodies."""
+    """Write an audit event. `details` must never contain narratives, identities or message bodies.
+
+    A hashed IP is kept only for staff actions and sign-in attempts. Anonymous reporting and tracking events
+    carry no IP link, so an anonymous report cannot be tied back to a connection through the audit trail.
+    """
     event = AuditEvent(
         actor_id=getattr(actor, "id", None),
         actor_role=getattr(actor, "role", None),
@@ -46,7 +50,7 @@ def record(
         case_id=case_id,
         reason=(reason or None),
         details=json.dumps(details, ensure_ascii=False)[:2000] if details else None,
-        ip_hash=_ip_hash(),
+        ip_hash=_ip_hash() if (actor is not None or event_type.startswith("auth.")) else None,
     )
     db.session.add(event)
     if commit:

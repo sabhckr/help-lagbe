@@ -60,7 +60,8 @@ class BaseConfig:
 
     # Uploads (evidence). Stored outside the static folder, never served directly.
     EVIDENCE_DIR = os.environ.get("EVIDENCE_DIR", str(INSTANCE_DIR / "evidence"))
-    MAX_CONTENT_LENGTH = _env_int("MAX_UPLOAD_MB", 25) * 1024 * 1024
+    # Vercel Functions accept at most 4.5 MB per request body, so the default there is 4 MB.
+    MAX_CONTENT_LENGTH = _env_int("MAX_UPLOAD_MB", 4 if os.environ.get("VERCEL") else 25) * 1024 * 1024
     EVIDENCE_MAX_FILES_PER_REPORT = 5
     EVIDENCE_ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "pdf", "mp3", "m4a", "mp4", "txt"}
     CLAMD_SOCKET = os.environ.get("CLAMD_SOCKET", "")  # e.g. /var/run/clamav/clamd.ctl ; empty = scanner unavailable

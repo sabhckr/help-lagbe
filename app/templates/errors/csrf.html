@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t('error.csrf_title') }} · {{ t('site.name') }}{% endblock %}
 {% block content %}
-<div class="error-page"><p class="eyebrow">{{ t('error.code') }} 400</p><h1>{{ t('error.csrf_title') }}</h1><p class="lead">{{ t('error.csrf_text') }}</p><a class="btn btn-primary" href="javascript:history.back()">{{ t('error.back') }}</a></div>
+<div class="error-page"><p class="eyebrow">{{ t('error.code') }} 400</p><h1>{{ t('error.csrf_title') }}</h1><p class="lead">{{ t('error.csrf_text') }}</p><a class="btn btn-primary" href="{{ request.referrer if request.referrer and request.referrer.startswith(request.host_url) else url_for('public.home') }}">{{ t('error.back') }}</a></div>
 {% endblock %}

@@ -9,9 +9,9 @@ inside the encrypted draft until the reporter confirms they have saved it.
 from __future__ import annotations
 
 import hashlib
-import os
 import secrets
 import shutil
+import time
 import uuid
 from datetime import timedelta
 from io import BytesIO
@@ -64,7 +64,17 @@ def current() -> ReportDraft | None:
     return row
 
 
+def open_draft() -> ReportDraft | None:
+    """The draft this browser is still writing. A submitted draft is never reused for a new report."""
+    row = current()
+    return row if row is not None and row.status == DRAFT_OPEN else None
+
+
 def start() -> ReportDraft:
+    previous = current()
+    if previous is not None and previous.status == DRAFT_SUBMITTED:
+        # The earlier report is already a case; drop its receipt so a new report starts clean.
+        delete(previous)
     token = secrets.token_urlsafe(32)
     row = ReportDraft(
         token_hash=_hash(token),
@@ -98,7 +108,6 @@ def add_files(row: ReportDraft, files: list[FileStorage]) -> list[tuple[str, str
     refusals: list[tuple[str, str]] = []
     existing = DraftFile.query.filter_by(draft_id=row.id).count()
     limit = current_limit()
-    folder = _dir(row)
     for upload in files:
         if not upload or not upload.filename:
             continue
@@ -110,15 +119,11 @@ def add_files(row: ReportDraft, files: list[FileStorage]) -> list[tuple[str, str
         except UploadError as exc:
             refusals.append((upload.filename, str(exc)))
             continue
-        folder.mkdir(parents=True, exist_ok=True)
-        stored = f"{uuid.uuid4().hex}.bin"
-        target = folder / stored
-        target.write_bytes(encrypt_bytes(raw))
-        os.chmod(target, 0o600)
         db.session.add(
             DraftFile(
                 draft_id=row.id,
-                stored_name=stored,
+                stored_name=f"{uuid.uuid4().hex}.bin",
+                data_enc=encrypt_bytes(raw),
                 original_name=uploads.safe_original_name(upload.filename),
                 mime_type=uploads.mime_for(ext),
                 size_bytes=len(raw),
@@ -141,7 +146,7 @@ def remove_file(row: ReportDraft, file_id: int) -> bool:
     item = DraftFile.query.filter_by(id=file_id, draft_id=row.id).first()
     if item is None:
         return False
-    (_dir(row) / item.stored_name).unlink(missing_ok=True)
+    (_dir(row) / item.stored_name).unlink(missing_ok=True)  # older drafts kept files on disk
     db.session.delete(item)
     db.session.commit()
     return True
@@ -179,7 +184,8 @@ def submit(row: ReportDraft, reporter_user=None) -> None:
     try:
         case, secret = create_case(report_steps.case_data(values), reporter_user=reporter_user, language=get_locale(), commit=False)
         for item in list(row.files):
-            raw = decrypt_bytes((_dir(row) / item.stored_name).read_bytes())
+            encrypted = item.data_enc if item.data_enc is not None else (_dir(row) / item.stored_name).read_bytes()
+            raw = decrypt_bytes(encrypted)
             uploads.store_evidence(
                 case,
                 FileStorage(stream=BytesIO(raw), filename=item.original_name, content_type=item.mime_type),
@@ -222,7 +228,28 @@ def delete(row: ReportDraft) -> None:
 
 
 def purge_expired() -> int:
-    stale = ReportDraft.query.filter(ReportDraft.expires_at < utcnow(), ReportDraft.status != DRAFT_SUBMITTING).all()
+    """Delete expired drafts and receipts. A draft stuck mid-submit (the process died) is removed an hour after expiry."""
+    now = utcnow()
+    stale = ReportDraft.query.filter(
+        ((ReportDraft.status != DRAFT_SUBMITTING) & (ReportDraft.expires_at < now))
+        | ((ReportDraft.status == DRAFT_SUBMITTING) & (ReportDraft.expires_at < now - timedelta(hours=1)))
+    ).all()
     for row in stale:
         delete(row)
     return len(stale)
+
+
+_last_purge = 0.0
+
+
+def purge_expired_now_and_then(interval_seconds: int = 60) -> None:
+    """Serverless hosts have no scheduler, so the report form itself triggers the clean-up, at most once a minute per process."""
+    global _last_purge
+    now = time.monotonic()
+    if now - _last_purge < interval_seconds:
+        return
+    _last_purge = now
+    try:
+        purge_expired()
+    except Exception:  # noqa: BLE001 - clean-up must never break the reporting form
+        db.session.rollback()

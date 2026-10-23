@@ -112,7 +112,9 @@ def test_hash_verification_detects_tampering(client, app):
     _upload(client, ref, "a.txt", b"hello world")
     ev = Evidence.query.one()
     assert uploads.verify_hash(ev, user_by_role("cyber")) is True
-    uploads.evidence_path(ev).write_bytes(b"tampered")
+    from app.crypto import encrypt_bytes
+
+    ev.data_enc = encrypt_bytes(b"tampered")
     assert uploads.verify_hash(ev, user_by_role("cyber")) is False
     assert any(c.notes == "MISMATCH" for c in ev.custody)
 
@@ -123,3 +125,39 @@ def test_evidence_not_served_from_static(client, app):
     _upload(client, ref, "a.txt", b"hello world")
     ev = Evidence.query.one()
     assert client.get(f"/static/evidence/{ref}/{ev.stored_name}").status_code == 404
+
+
+def test_evidence_is_encrypted_in_the_database_and_not_written_to_disk(client, app):
+    login(client, "cyber")
+    ref = _case().reference
+    _upload(client, ref, "a.txt", b"PLAINTEXT-EVIDENCE-MARKER")
+    ev = Evidence.query.one()
+    assert ev.data_enc is not None and b"PLAINTEXT-EVIDENCE-MARKER" not in ev.data_enc
+    root = uploads.evidence_root()
+    assert not root.exists() or not any(p.is_file() for p in root.rglob("*"))
+    r = client.post(f"/workspace/cases/{ref}/evidence/{ev.id}/download", data={"reason": "Checking the uploaded text for the case file."})
+    assert r.status_code == 200 and r.data == b"PLAINTEXT-EVIDENCE-MARKER"
+
+
+def test_older_evidence_on_disk_still_downloads(client, app):
+    """Records made before database storage keep working: contents are read from the old disk path."""
+    from app import db
+
+    login(client, "cyber")
+    case = _case()
+    ev = Evidence(
+        case_id=case.id,
+        stored_name="legacy.txt",
+        original_name="legacy.txt",
+        mime_type="text/plain",
+        size_bytes=11,
+        sha256="0" * 64,
+        scan_status="not_scanned",
+    )
+    db.session.add(ev)
+    db.session.commit()
+    path = uploads.evidence_path(ev)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"legacy body")
+    r = client.post(f"/workspace/cases/{case.reference}/evidence/{ev.id}/download", data={"reason": "Reading an older file kept on disk."})
+    assert r.status_code == 200 and r.data == b"legacy body"

@@ -45,11 +45,11 @@
   </ol>
 
   <div class="cluster mt-3 no-print">
-    <button type="button" class="btn btn-ghost" onclick="window.print()">{{ t('ui.print') }}</button>
+    <button type="button" class="btn btn-ghost" data-print>{{ t('ui.print') }}</button>
     <a class="btn btn-secondary" href="{{ url_for('track.index') }}">{{ t('nav.track') }}</a>
   </div>
 
-  <form method="post" action="{{ url_for('report.dismiss') }}" class="mt-5">
+  <form method="post" action="{{ url_for('report.dismiss') }}" class="mt-5" data-clear-autosave>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn btn-primary" type="submit">{{ t('received.saved_button') }}</button>
     <p class="small muted mt-2">{{ t('received.saved_note') }}</p>

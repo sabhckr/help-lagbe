@@ -58,13 +58,10 @@ def get_locale() -> str:
     default = current_app.config.get("DEFAULT_LANGUAGE", "en")
     locale = default
     if has_request_context():
+        # Bangla first: the browser's language is not consulted; only the visitor's own choice is.
         cookie = request.cookies.get(COOKIE_NAME)
         if cookie in languages:
             locale = cookie
-        else:
-            best = request.accept_languages.best_match(languages)
-            if best:
-                locale = best
         request.environ["helplagbe.locale"] = locale
     return locale
 

@@ -17,8 +17,13 @@ from app.services.drafts import DraftError
 report_bp = Blueprint("report", __name__)
 
 
+@report_bp.before_request
+def _clean_up_expired_drafts():
+    drafts.purge_expired_now_and_then()
+
+
 def _saved() -> dict:
-    return drafts.data(drafts.current())
+    return drafts.data(drafts.open_draft())
 
 
 def _verified_contacts():
@@ -26,7 +31,7 @@ def _verified_contacts():
 
 
 def _render(step: int, values, errors: dict | None = None, status: int = 200):
-    row = drafts.current()
+    row = drafts.open_draft()
     files = DraftFile.query.filter_by(draft_id=row.id).order_by(DraftFile.id).all() if row else []
     return render_template(
         "report/step.html",
@@ -59,7 +64,7 @@ def step(step: int):
         if errors:
             flash(t("validation.form_errors"), "error")
             return _render(step, request.form, errors, 422)
-        row = drafts.current() or drafts.start()
+        row = drafts.open_draft() or drafts.start()
         drafts.save(row, values)
         return redirect(url_for("report.step", step=step + 1))
     return _render(step, _saved())
@@ -70,7 +75,7 @@ def _evidence():
         return _render(5, _saved())
     uploads = [item for item in request.files.getlist("evidence") if item and item.filename]
     if uploads:
-        row = drafts.current() or drafts.start()
+        row = drafts.open_draft() or drafts.start()
         refusals = drafts.add_files(row, uploads)
         for filename, key in refusals:
             flash(f"{filename}: {t(key)}", "error")
@@ -79,14 +84,14 @@ def _evidence():
         return redirect(url_for("report.step", step=5))
     if request.form.get("action") == "back":
         return redirect(url_for("report.step", step=4))
-    if drafts.current() is None:
+    if drafts.open_draft() is None:
         drafts.start()
     return redirect(url_for("report.step", step=6))
 
 
 @report_bp.route("/5/remove/<int:file_id>", methods=["POST"])
 def remove_file(file_id: int):
-    row = drafts.current()
+    row = drafts.open_draft()
     if row is None or not drafts.remove_file(row, file_id):
         abort(404)
     flash(t("report.file_removed"), "success")
@@ -99,7 +104,7 @@ def _review(submitting: bool):
     if not submitting:
         if missing is not None and missing != steps.STEP_COUNT:
             return redirect(url_for("report.step", step=missing))
-        row = drafts.current()
+        row = drafts.open_draft()
         files = DraftFile.query.filter_by(draft_id=row.id).order_by(DraftFile.id).all() if row else []
         return render_template(
             "report/step.html",
@@ -121,8 +126,11 @@ def _review(submitting: bool):
     if errors:
         flash(t("validation.form_errors"), "error")
         return _render(steps.STEP_COUNT, request.form, errors, 422)
-    row = drafts.current()
+    row = drafts.open_draft()
     if row is None:
+        # A repeated click after a successful submit lands on the receipt, never on a second case.
+        if drafts.receipt(drafts.current()) is not None:
+            return redirect(url_for("report.received"))
         return redirect(url_for("report.step", step=1))
     drafts.save(row, consent_values)
     try:

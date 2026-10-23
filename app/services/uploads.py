@@ -1,5 +1,5 @@
-"""Evidence uploads: allow-listed types verified by magic bytes, size limits, random storage
-names outside the web root, SHA-256 hashing, optional ClamAV scan, reason-gated downloads."""
+"""Evidence uploads: allow-listed types verified by magic bytes, size limits, SHA-256 hashing,
+optional ClamAV scan, encrypted storage in the database, reason-gated downloads."""
 
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ import socket
 import uuid
 from pathlib import Path
 
+from cryptography.fernet import InvalidToken
 from flask import current_app
 from werkzeug.datastructures import FileStorage
 
 from app import permissions as P
-from app.crypto import sha256_hex
+from app.crypto import decrypt_bytes, encrypt_bytes, sha256_hex
 from app.extensions import db
 from app.models.base import utcnow
 from app.models.case import Case
@@ -107,14 +108,13 @@ def _safe_original_name(name: str) -> str:
 
 
 def evidence_root() -> Path:
-    root = Path(current_app.config["EVIDENCE_DIR"] or (Path(current_app.instance_path) / "evidence"))
-    root.mkdir(parents=True, exist_ok=True)
-    return root
+    """Folder used for evidence before it was stored in the database. Only read for older records."""
+    return Path(current_app.config["EVIDENCE_DIR"] or (Path(current_app.instance_path) / "evidence"))
 
 
-def scan_file(path: Path) -> tuple[str, str | None]:
+def scan_bytes(data: bytes) -> tuple[str, str | None]:
     """Scan with clamd over a UNIX socket when CLAMD_SOCKET is configured; otherwise report
-    honestly that the file was not scanned."""
+    honestly that the file was not scanned. Scanning happens before encryption."""
     sock_path = current_app.config.get("CLAMD_SOCKET")
     if not sock_path:
         return SCAN_NOT_SCANNED, "scanner not configured"
@@ -123,9 +123,9 @@ def scan_file(path: Path) -> tuple[str, str | None]:
             s.settimeout(20)
             s.connect(sock_path)
             s.sendall(b"zINSTREAM\0")
-            with path.open("rb") as fh:
-                while chunk := fh.read(65536):
-                    s.sendall(len(chunk).to_bytes(4, "big") + chunk)
+            for offset in range(0, len(data), 65536):
+                chunk = data[offset : offset + 65536]
+                s.sendall(len(chunk).to_bytes(4, "big") + chunk)
             s.sendall(b"\0\0\0\0")
             reply = s.recv(4096).decode(errors="replace").strip()
     except OSError as exc:
@@ -138,50 +138,22 @@ def scan_file(path: Path) -> tuple[str, str | None]:
 
 
 def store_evidence(case: Case, file: FileStorage, *, description: str | None = None, uploaded_by=None) -> Evidence:
+    """Validate, scan, hash and store a file encrypted in the database. Nothing is written to disk."""
     cfg = current_app.config
-    if not file or not file.filename:
-        raise UploadError("upload.error_empty")
-    ext = _ext(file.filename)
-    if ext not in cfg["EVIDENCE_ALLOWED_EXTENSIONS"] or ext not in _SIGNATURES:
-        raise UploadError("upload.error_type")
-    head = file.stream.read(16)
-    file.stream.seek(0)
-    if not _sniff_ok(ext, head):
-        raise UploadError("upload.error_type")
+    ext, data = read_validated(file)
     existing = Evidence.query.filter_by(case_id=case.id).filter(Evidence.deleted_at.is_(None)).count()
     if existing >= cfg["EVIDENCE_MAX_FILES_PER_REPORT"]:
         raise UploadError("upload.error_count")
-
-    case_dir = evidence_root() / case.reference
-    case_dir.mkdir(parents=True, exist_ok=True)
-    stored_name = f"{uuid.uuid4().hex}.{ext}"
-    target = case_dir / stored_name
-    size = 0
-    hasher_chunks: list[bytes] = []
-    max_bytes = cfg["MAX_CONTENT_LENGTH"]
-    with target.open("wb") as out:
-        while chunk := file.stream.read(1024 * 256):
-            size += len(chunk)
-            if size > max_bytes:
-                out.close()
-                target.unlink(missing_ok=True)
-                raise UploadError("upload.error_size")
-            out.write(chunk)
-            hasher_chunks.append(chunk)
-    if size == 0:
-        target.unlink(missing_ok=True)
-        raise UploadError("upload.error_empty")
-    digest = sha256_hex(b"".join(hasher_chunks))
-    os.chmod(target, 0o600)
-    scan_status, scan_detail = scan_file(target)
-
+    digest = sha256_hex(data)
+    scan_status, scan_detail = scan_bytes(data)
     evidence = Evidence(
         case_id=case.id,
-        stored_name=stored_name,
-        original_name=_safe_original_name(file.filename),
+        stored_name=f"{uuid.uuid4().hex}.{ext}",
+        original_name=_safe_original_name(file.filename or "file"),
         mime_type=_SIGNATURES[ext][0],
-        size_bytes=size,
+        size_bytes=len(data),
         sha256=digest,
+        data_enc=encrypt_bytes(data),
         description=(description or "").strip() or None,
         scan_status=scan_status,
         scan_detail=scan_detail,
@@ -206,17 +178,28 @@ def store_evidence(case: Case, file: FileStorage, *, description: str | None = N
         target_type="evidence",
         target_id=evidence.id,
         case_id=case.id,
-        details={"ext": ext, "size": size, "scan": scan_status},
+        details={"ext": ext, "size": len(data), "scan": scan_status},
     )
     return evidence
 
 
 def evidence_path(evidence: Evidence) -> Path:
+    """Disk location used by records created before database storage."""
     return evidence_root() / evidence.case.reference / evidence.stored_name
 
 
-def authorize_download(evidence: Evidence, user, reason: str, *, export: bool = False) -> Path:
-    """Check permission + assignment + reason, log, and return the file path."""
+def read_evidence(evidence: Evidence) -> bytes:
+    """Decrypted contents. Older records are plain files on disk; newer ones are encrypted in the database."""
+    if evidence.data_enc is not None:
+        return decrypt_bytes(evidence.data_enc)
+    path = evidence_path(evidence)
+    if not path.exists():
+        raise FileNotFoundError(evidence.stored_name)
+    return path.read_bytes()
+
+
+def authorize_download(evidence: Evidence, user, reason: str, *, export: bool = False) -> bytes:
+    """Check permission, assignment and reason, record the access, and return the decrypted bytes."""
     reason = (reason or "").strip()
     perm = P.CASE_EVIDENCE_EXPORT if export else P.CASE_EVIDENCE_DOWNLOAD
     allowed = user.can(perm) and access.can_view_narrative(user, evidence.case) and evidence.is_available
@@ -232,9 +215,7 @@ def authorize_download(evidence: Evidence, user, reason: str, *, export: bool = 
             commit=True,
         )
         raise PermissionError("evidence.error_denied")
-    path = evidence_path(evidence)
-    if not path.exists():
-        raise FileNotFoundError
+    data = read_evidence(evidence)
     db.session.add(
         CustodyRecord(
             evidence_id=evidence.id,
@@ -253,14 +234,14 @@ def authorize_download(evidence: Evidence, user, reason: str, *, export: bool = 
         reason=reason,
     )
     db.session.commit()
-    return path
+    return data
 
 
 def verify_hash(evidence: Evidence, user) -> bool:
-    path = evidence_path(evidence)
-    if not path.exists():
-        return False
-    digest = sha256_hex(path.read_bytes())
+    try:
+        digest = sha256_hex(read_evidence(evidence))
+    except (FileNotFoundError, InvalidToken):
+        digest = "unreadable"
     ok = digest == evidence.sha256
     db.session.add(
         CustodyRecord(

@@ -140,3 +140,29 @@ Old addresses redirect permanently to their new pages.
 - No real low-end Android phone or throttled network was tested.
 - The Bangla text was written by the assistant and has not been reviewed by a native editor.
 - The 999 and 109 sources are news and directory pages, not government pages. 1098 is not shown because no reliable source confirmed it.
+
+## 8. Pre-deployment audit of 1e55dfe (23 October 2026, second pass)
+
+Defects found in `1e55dfe` and fixed in the next commit, each with a regression test:
+
+| Severity | Defect | Fix |
+|---|---|---|
+| High | Quick exit did nothing in Chrome: the site's own CSP `form-action 'self'` blocked the form's redirect to the neutral page. | Quick exit is a link followed with `location.replace`, so it leaves no Back entry. |
+| High | A second report started before dismissing the receipt reused the submitted draft. No case was created, and the old receipt was shown as if the new report had been received. | Submitted drafts are never reused; a new report starts a new draft. |
+| High | The privacy page said uploaded files are stored encrypted, but submitted evidence was written to disk in plain form. | Evidence is encrypted in the database. Older files on disk are still read. |
+| High | Anonymous case creation and tracking stored a salted hash of the visitor's IP in the audit trail, which could link a report to a connection. | No IP link for events without a staff actor; sign-in events keep it. The privacy page now mentions hosting logs. |
+| High | Draft and evidence files were written to local disk. On Vercel's multi-instance, read-only host that loses uploads and can break submission. | Draft and case files are stored encrypted in the database (migration `c3cee4c88fb2`). |
+| Medium | Uploads up to 25 MB were advertised, but Vercel rejects request bodies over 4.5 MB. | The default is 4 MB on Vercel; the copy says "per upload". |
+| Medium | Quick exit left autosaved report text in the tab, so Back could bring it back. | Quick exit and receipt dismissal wipe autosaved text. |
+| Medium | Expired drafts and receipts relied on a clean-up command that nothing schedules on Vercel. | The report form purges expired drafts, at most once a minute. |
+| Medium | Identity fields could not be filled in without JavaScript. | Fields render visible; the script hides them only for anonymous reports. |
+| Medium | Staff saw a raw key for the new "more information needed" status. | Labels added in both languages; a test covers every status. |
+| Medium | The Print button and the CSRF page's "go back" link used inline handlers that the CSP blocks. | Moved to the script and a safe link. |
+| Medium | The documented production settings needed PostgreSQL and Redis drivers that were not installed. | `psycopg[binary]` and `redis` pinned in requirements; pip-audit clean. |
+| Low | A browser set to English overrode the Bangla-first default. | Only the visitor's own choice switches language. |
+| Low | Copy promised review "by a trained person" and supervised staff, which the code cannot guarantee. | Reworded to what the system records. |
+| Low | A draft stuck mid-submit by a crashed process was never purged. | Purged an hour after expiry. |
+
+Finding 2 in section 3 (the chat token in the session cookie) is reassessed as low. The token only opens the visitor's own conversation, it is cleared on leaving and on quick exit, and the cookie is `HttpOnly` and `Secure` in production.
+
+Deployment facts and open questions are in [DEPLOYMENT.md](DEPLOYMENT.md).

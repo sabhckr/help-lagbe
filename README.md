@@ -61,8 +61,8 @@ python -m pytest                                       # tests only
 
 - Run with `gunicorn -c gunicorn.conf.py wsgi:app` behind a TLS-terminating reverse proxy; set `TRUSTED_PROXY_COUNT`.
 - Set `APP_ENV=production`, a 32+ character `SECRET_KEY`, an `IDENTITY_ENCRYPTION_KEY` (Fernet), `DATABASE_URL` (PostgreSQL recommended), `RATELIMIT_STORAGE_URI` (Redis) and `SESSION_COOKIE_SECURE=true`. The app refuses to start with placeholder secrets.
-- Apply migrations with `flask --app wsgi.py db upgrade` as a deploy step; the app never auto-migrates in production.
-- Mount `EVIDENCE_DIR` on storage that is not web-served, and configure `CLAMD_SOCKET` if ClamAV is available (otherwise uploads are honestly marked *not scanned*).
+- Apply migrations with `flask --app wsgi.py db upgrade` before deploying new code; the app never auto-migrates in production. See `docs/DEPLOYMENT.md` for the checked sequence and the open production questions.
+- Evidence is stored encrypted in the database, so the app needs no writable disk. Configure `CLAMD_SOCKET` if ClamAV is available; otherwise uploads are honestly marked *not scanned*. On Vercel, uploads default to 4 MB per request.
 - There is **no outbound email or SMS**: reporters are reached only through the Track My Case page. See `docs/DELIVERY-REPORT.md` for launch blockers and staffing requirements.
 
 ## Repository layout

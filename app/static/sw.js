@@ -1,5 +1,5 @@
 /* Minimal offline support: cache the shell + public pages visited; never touch private routes. */
-const VERSION = "hl-v1";
+const VERSION = "hl-v2";
 const PRIVATE = ["/workspace", "/track", "/support", "/auth", "/report", "/my-reports", "/requests", "/quick-exit"];
 const SHELL = ["/offline", "/static/css/app.css", "/static/js/app.js", "/static/img/logo.svg", "/manifest.webmanifest"];
 

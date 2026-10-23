@@ -30,7 +30,11 @@ def create_app(config_name: str | None = None, overrides: dict | None = None) ->
         app.config.update(overrides)
     if app.config.get("ENV_NAME") == "production":
         cfg.validate()  # type: ignore[attr-defined]
-    os.makedirs(app.instance_path, exist_ok=True)
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+    except OSError:
+        # Read-only filesystem (serverless). Nothing in production writes here; evidence lives in the database.
+        logging.getLogger(__name__).info("instance folder not writable; continuing")
     _configure_logging(app)
 
     proxies = int(app.config.get("TRUSTED_PROXY_COUNT") or 0)

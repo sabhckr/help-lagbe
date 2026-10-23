@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.extensions import Model
@@ -25,6 +25,8 @@ class Evidence(Model):
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    # Encrypted contents. Deferred so lists of evidence never load file data. NULL for older records kept on disk.
+    data_enc: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     scan_status: Mapped[str] = mapped_column(String(16), nullable=False, default=SCAN_NOT_SCANNED)
     scan_detail: Mapped[str | None] = mapped_column(String(255), nullable=True)

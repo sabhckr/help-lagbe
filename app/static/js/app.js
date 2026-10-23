@@ -39,10 +39,20 @@
     if (e.key !== "Escape") { return; }
     escCount += 1; clearTimeout(escTimer);
     escTimer = setTimeout(function () { escCount = 0; }, 1200);
-    if (escCount >= 3) { var f = document.querySelector(".quick-exit"); if (f) { f.submit(); } }
+    if (escCount >= 3) { leaveNow(); }
   });
+  function clearAllAutosave() {
+    try { Object.keys(sessionStorage).forEach(function (k) { if (k.indexOf("hl:") === 0) { sessionStorage.removeItem(k); } }); } catch (err) {}
+  }
+  /* Quick exit: wipe text saved in this tab, then replace this page so Back does not return to it */
   var qe = document.getElementById("quick-exit");
-  if (qe) { qe.addEventListener("click", function () { try { history.replaceState(null, "", "/"); } catch (err) {} }); }
+  function leaveNow() {
+    clearAllAutosave();
+    window.location.replace(qe ? qe.href : "/quick-exit");
+  }
+  if (qe) { qe.addEventListener("click", function (e) { e.preventDefault(); leaveNow(); }); }
+  document.querySelectorAll("form[data-clear-autosave]").forEach(function (f) { f.addEventListener("submit", clearAllAutosave); });
+  document.querySelectorAll("[data-print]").forEach(function (b) { b.addEventListener("click", function () { window.print(); }); });
 
   /* Offline banner */
   var banner = document.getElementById("offline-banner");
@@ -110,11 +120,12 @@
   var identityForm = document.querySelector("[data-identity-toggle]");
   if (identityForm) {
     var panel = identityForm.querySelector("[data-identity-fields]");
-    identityForm.querySelectorAll('input[name="submission_type"]').forEach(function (r) {
-      r.addEventListener("change", function () {
-        if (panel) { panel.hidden = !(r.checked && r.value === "confidential"); }
-      });
-    });
+    function syncIdentity() {
+      var chosen = identityForm.querySelector('input[name="submission_type"]:checked');
+      if (panel) { panel.hidden = !(chosen && chosen.value === "confidential"); }
+    }
+    identityForm.querySelectorAll('input[name="submission_type"]').forEach(function (r) { r.addEventListener("change", syncIdentity); });
+    syncIdentity();
   }
 
   /* Evidence step: list chosen files, check type and size before sending, show upload progress */

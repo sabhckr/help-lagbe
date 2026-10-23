@@ -129,6 +129,9 @@ def test_dynamic_keys_used_by_the_report_flow_exist(app):
         [f"pstatus.{s}" for s in PUBLIC_STATES] + [f"pstatus_help.{s}" for s in PUBLIC_STATES] + [f"track.next_{s}" for s in PUBLIC_STATES]
     )
     needed += [f"step.{n}.{part}" for n in range(1, 7) for part in ("title", "question")]
+    from app.models.case import STATUSES
+
+    needed += [f"status.{s}" for s in STATUSES]
     needed += [f"step.2.{k}" for k in ("yes", "unsure", "no")] + [
         f"step.4.contact.{k}" for k in ("tracking_page", "phone", "email", "none")
     ]
@@ -289,3 +292,53 @@ def test_env_example_has_no_real_secrets():
     text = (pathlib.Path(__file__).resolve().parent.parent / ".env.example").read_text()
     assert "IDENTITY_ENCRYPTION_KEY=\n" in text and "change-me" in text
     assert json.dumps(text).count("gho_") == 0
+
+
+def test_no_inline_handlers_that_the_csp_would_block(app):
+    for path in (pathlib.Path(app.root_path) / "templates").rglob("*.html"):
+        text = path.read_text()
+        assert not re.search(r"\son[a-z]+=|javascript:|style=\"", text), path.name
+
+
+def test_receipt_print_button_is_wired_by_script(client):
+    from tests.conftest import walk_report
+
+    walk_report(client)
+    html = client.get("/report/received").data.decode()
+    assert "data-print" in html and "onclick" not in html
+
+
+def test_browser_language_does_not_override_bangla_default(tmp_path):
+    from app import create_app
+
+    bangla_app = create_app("testing", {"DEFAULT_LANGUAGE": "bn", "EVIDENCE_DIR": str(tmp_path)})
+    html = bangla_app.test_client().get("/", headers={"Accept-Language": "en-US,en;q=0.9"}).data.decode()
+    assert '<html lang="bn"' in html
+
+
+def test_upload_limit_defaults_below_the_vercel_request_limit(monkeypatch):
+    import importlib
+
+    import config
+
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.delenv("MAX_UPLOAD_MB", raising=False)
+    try:
+        assert importlib.reload(config).BaseConfig.MAX_CONTENT_LENGTH == 4 * 1024 * 1024
+    finally:
+        monkeypatch.delenv("VERCEL", raising=False)
+        importlib.reload(config)
+    assert config.BaseConfig.MAX_CONTENT_LENGTH == 25 * 1024 * 1024
+
+
+def test_health_page_reports_encrypted_database_storage(client):
+    login(client, "admin")
+    assert b"database, encrypted" in client.get("/workspace/admin/health").data
+
+
+def test_quick_exit_is_a_link_so_the_csp_cannot_block_it(client):
+    html = client.get("/").data.decode()
+    assert 'id="quick-exit"' in html and 'href="/quick-exit"' in html
+    assert 'action="/quick-exit"' not in html  # a form redirect off-site would be blocked by form-action 'self'
+    r = client.get("/quick-exit")
+    assert r.status_code == 303 and r.headers["Location"].startswith("https://www.google.com/")

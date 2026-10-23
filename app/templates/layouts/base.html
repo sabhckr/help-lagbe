@@ -48,10 +48,8 @@
           <a href="{{ url_for('public.set_language', code=code, next=request.full_path.rstrip('?')) }}" lang="{{ code }}" hreflang="{{ code }}" rel="nofollow" {% if code == current_locale %}aria-current="true"{% endif %}>{{ LANGUAGE_NAMES[code] }}</a>
         {% endfor %}
       </nav>
-      <form method="post" action="{{ url_for('public.quick_exit') }}" class="quick-exit" title="{{ t('a11y.quick_exit_help') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-danger btn-sm" id="quick-exit">{{ t('nav.quick_exit') }}</button>
-      </form>
+      {# A link, not a form: the CSP form-action rule would block a form's redirect to the neutral site. #}
+      <a class="btn btn-danger btn-sm quick-exit" id="quick-exit" href="{{ url_for('public.quick_exit') }}" rel="nofollow" title="{{ t('a11y.quick_exit_help') }}">{{ t('nav.quick_exit') }}</a>
     </div>
   </div>
 </header>

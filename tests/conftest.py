@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pyotp
 import pytest
 
@@ -16,7 +18,12 @@ TOTP_SECRET = pyotp.random_base32()
 
 @pytest.fixture
 def app(tmp_path):
-    application = create_app("testing", {"EVIDENCE_DIR": str(tmp_path / "evidence")})
+    overrides = {"EVIDENCE_DIR": str(tmp_path / "evidence")}
+    # Opt-in: run the same suite against a throwaway PostgreSQL database.
+    url = os.environ.get("TEST_DATABASE_URL")
+    if url:
+        overrides.update({"SQLALCHEMY_DATABASE_URI": url, "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": False}})
+    application = create_app("testing", overrides)
     with application.app_context():
         seed_demo()
         yield application

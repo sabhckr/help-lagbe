@@ -290,6 +290,11 @@ input[type="file"] { max-width: 100%; min-height: var(--touch); padding: .5rem 0
 .chat__banner { background: var(--coral); color: var(--coral-ink); padding: .5rem .8rem; border-radius: var(--radius-sm); margin-bottom: .75rem; }
 
 /* Staff workspace (uses the same tokens) */
+.card--danger { border-left: 5px solid var(--primary); }
+.card--green { border-left: 5px solid var(--teal-ink); }
+.card--blue, .card--accent { border-left: 5px solid var(--text-2); }
+.steps { padding-left: 1.25rem; }
+.steps > li + li { margin-top: .75rem; }
 .workspace-layout { display: grid; gap: 1.5rem; padding: 1.25rem 0 3rem; flex: 1; }
 @media (min-width: 900px) { .workspace-layout { grid-template-columns: 230px 1fr; } }
 .workspace-nav { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; align-self: start; }

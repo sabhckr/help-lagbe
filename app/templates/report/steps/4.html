@@ -29,9 +29,9 @@
     <p class="small"><a href="{{ url_for('public.privacy') }}">{{ t('step.4.privacy_link') }}</a></p>
   </section>
 
-  <div class="stack mt-3" data-identity-fields {% if not confidential %}hidden{% endif %}>
+  <div class="stack mt-3" data-identity-fields>
     <h2>{{ t('step.4.details_title') }}</h2>
-    <p class="hint">{{ t('step.4.details_help') }}</p>
+    <p class="hint">{{ t('step.4.details_help') }} {{ t('step.4.details_only_confidential') }}</p>
     <div class="field {{ 'field--error' if errors.identity_name }}">
       <label for="identity_name">{{ t('step.4.name') }}</label>
       <input type="text" id="identity_name" name="identity_name" value="{{ values.get('identity_name', '') }}" maxlength="120" autocomplete="name">

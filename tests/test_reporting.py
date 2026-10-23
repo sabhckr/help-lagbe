@@ -160,8 +160,8 @@ def test_evidence_is_validated_encrypted_removable_and_moved_on_submit(client, a
     assert b"tool.exe" in r.data and b"not allowed" in r.data
     files = DraftFile.query.all()
     assert len(files) == 1 and files[0].original_name == "proof.png"
-    stored = evidence_root() / "drafts" / str(files[0].draft_id) / files[0].stored_name
-    assert stored.read_bytes() != png and decrypt_bytes(stored.read_bytes()) == png
+    assert files[0].data_enc != png and decrypt_bytes(files[0].data_enc) == png
+    assert not (evidence_root() / "drafts").exists()
     client.post("/report/5", data={"evidence": [(io.BytesIO(png), "second.png")]}, content_type="multipart/form-data")
     second = DraftFile.query.filter_by(original_name="second.png").one()
     r = client.post(f"/report/5/remove/{second.id}")
@@ -171,7 +171,8 @@ def test_evidence_is_validated_encrypted_removable_and_moved_on_submit(client, a
     case = Case.query.order_by(Case.id.desc()).first()
     evidence = Evidence.query.filter_by(case_id=case.id).one()
     assert evidence.original_name == "proof.png" and evidence.uploaded_by_reporter
-    assert DraftFile.query.count() == 0 and not stored.exists()
+    assert DraftFile.query.count() == 0
+    assert decrypt_bytes(evidence.data_enc) == png
 
 
 def test_files_are_capped_per_report(client, app):
@@ -265,3 +266,54 @@ def test_phone_number_typed_in_bangla_digits_is_accepted(client):
     )
     case = Case.query.order_by(Case.id.desc()).first()
     assert case.identity.read_payload()["phone"] == "01712345678"
+
+
+def test_second_report_after_submitting_creates_a_second_case(client):
+    """Regression: a new report started before dismissing the receipt must not reuse the submitted draft."""
+    walk_report(client)
+    first = client.get("/report/received").data.decode().split('id="ref">')[1].split("<")[0]
+    r = walk_report(client, {3: {"narrative": "A second, different incident at the market last night."}})
+    assert r.status_code == 302 and r.headers["Location"].endswith("/report/received")
+    assert Case.query.count() == SEEDED + 2
+    second = client.get("/report/received").data.decode().split('id="ref">')[1].split("<")[0]
+    assert second != first
+    assert Case.query.filter_by(reference=second).one().narrative.startswith("A second")
+
+
+def test_anonymous_reporting_and_tracking_store_no_ip_link(client):
+    walk_report(client)
+    case = Case.query.order_by(Case.id.desc()).first()
+    events = AuditEvent.query.filter(AuditEvent.case_id == case.id).all()
+    assert events and all(e.ip_hash is None for e in events)
+    page = client.get("/report/received").data.decode()
+    secret = page.split('id="secret">')[1].split("<")[0]
+    client.post("/track/", data={"reference": case.reference, "secret": secret})
+    assert AuditEvent.query.filter_by(event_type="track.opened").one().ip_hash is None
+    client.post("/auth/login", data={"email": "nobody@example.org", "password": "wrong-password-12"})
+    assert AuditEvent.query.filter_by(event_type="auth.login_failed").one().ip_hash is not None
+
+
+def test_expired_drafts_are_purged_when_anyone_uses_the_form(client, app):
+    from app.services import drafts as draft_service
+
+    other = app.test_client()
+    other.post("/report/1", data={"category": "other"})
+    ReportDraft.query.one().expires_at = utcnow().replace(year=2000)
+    db.session.commit()
+    draft_service._last_purge = 0.0
+    client.get("/report/1")
+    assert ReportDraft.query.count() == 0
+
+
+def test_stuck_submitting_drafts_are_purged(client):
+    client.post("/report/1", data={"category": "other"})
+    row = ReportDraft.query.one()
+    row.status = "submitting"
+    row.expires_at = utcnow().replace(year=2000)
+    db.session.commit()
+    assert drafts.purge_expired() == 1
+
+
+def test_identity_fields_work_without_javascript(client):
+    html = client.get("/report/4").data.decode()
+    assert "data-identity-fields hidden" not in html and 'name="identity_name"' in html

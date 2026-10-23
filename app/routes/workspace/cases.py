@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from io import BytesIO
 from typing import Any
 
+from cryptography.fernet import InvalidToken
 from flask import abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import current_user
 
@@ -399,12 +401,12 @@ def case_evidence_download(reference: str, evidence_id: int):
     if export and not current_user.can(P.CASE_EVIDENCE_EXPORT):
         abort(403)
     try:
-        path = uploads.authorize_download(ev, current_user, form.reason.data or "", export=export)
+        data = uploads.authorize_download(ev, current_user, form.reason.data or "", export=export)
     except PermissionError:
         abort(403)
-    except FileNotFoundError:
+    except (FileNotFoundError, InvalidToken):
         abort(404)
-    return send_file(path, as_attachment=True, download_name=ev.original_name, mimetype=ev.mime_type, max_age=0)
+    return send_file(BytesIO(data), as_attachment=True, download_name=ev.original_name, mimetype=ev.mime_type, max_age=0)
 
 
 @workspace_bp.route("/cases/<reference>/evidence/<int:evidence_id>/verify", methods=["POST"])
